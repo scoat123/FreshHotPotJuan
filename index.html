@@ -206,7 +206,7 @@ window.addEventListener("error",function(e){alert("發生錯誤："+e.message)})
 var guest=false,zi=null,MENU=[],cat=0,mode="內用",table=null,cart={},token=null,role=null,sel="f",pin="",tab="orders",lastP=-1,dE=null,MA=null;
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-var API_URL="請貼上 Apps Script 網頁應用程式網址（以 /exec 結尾）";
+var API_URL="https://script.google.com/macros/s/AKfycbxVgWd3tKKGkidfE8PuJOMj3fExsQZZZW0iVJspg4KUtgZCglxqrl7Lokxspd095ehgYg/exec";
 function post(fn,args){return fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:args})}).then(function(r){return r.json()})}
 function call(fn,args,ok,fail,noTok){
  if(API_URL.indexOf("https://script.google.com/")!==0){var m0="尚未設定 API_URL，請編輯 index.html 最上方的網址";if(fail)fail(m0);else alert(m0);return}
