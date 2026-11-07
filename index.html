@@ -183,6 +183,35 @@ body.guest nav button{font-size:20px;padding:22px 8px}
 .xz{position:absolute;top:10px;right:10px;width:48px;height:48px;border-radius:24px;background:rgba(0,0,0,.6);color:#fff;font-size:22px;z-index:2}
 #zoom{z-index:25}
 .seg small{display:block;font-weight:400;font-size:14px;opacity:.85;margin-top:4px}
+.kw{display:flex;gap:14px;align-items:flex-start}
+.kq{flex:0 0 230px;position:sticky;top:0;max-height:calc(100vh - 90px);overflow:auto;display:flex;flex-direction:column;gap:8px}
+.qi{display:block;width:100%;background:#2a1d1a;color:#f6e9e2;border-radius:12px;padding:10px 12px;text-align:left;border-left:8px solid #ffd52e}
+.qi.st1{border-color:#4cc38a}.qi.st2{border-color:#4aa3ff}.qi.sel{outline:3px solid #fff}
+.qi b{font-size:22px}.qi small{display:block;opacity:.75}
+.kf{flex:1;min-width:0}
+.fh{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;position:sticky;top:0;background:#17100f;z-index:3}
+.fn{font-size:34px;font-weight:800}.ft{font-size:30px;font-weight:800;color:#ffd52e;margin-left:10px}
+.fm{display:block;color:#b3a199}
+.act{height:64px;padding:0 28px;border-radius:14px;font-size:22px;font-weight:800;background:var(--red);color:#fff}
+.nt.big{font-size:20px;font-weight:700;margin:6px 0}
+.kmap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.kcol{display:flex;flex-direction:column;gap:10px}
+.ks{background:#241816;border-radius:12px;overflow:hidden;border:3px solid transparent}
+.ks.has{border-color:#ffd52e}
+.ks h4{margin:0;padding:6px 10px;background:#ffd52e;color:#2a1a17;font-size:18px;display:flex;justify-content:space-between;align-items:center;opacity:.5}
+.ks.has h4{opacity:1}
+.sn{background:#c4161c;color:#fff;border-radius:12px;min-width:28px;text-align:center;padding:0 8px}
+.kg{display:grid;grid-auto-flow:column;gap:2px 6px;padding:6px}
+.kc{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px;padding:5px 8px;border-radius:8px;font-size:16px;opacity:.38;min-height:36px}
+.kc.on{opacity:1;background:#ffd52e;color:#2a1a17;font-weight:800;font-size:18px;box-shadow:0 0 0 2px #c4161c}
+.qt{background:#c4161c;color:#fff;border-radius:10px;padding:0 8px;font-size:18px}
+.kc.mv{flex-direction:column;align-items:flex-start}
+.vcs{display:flex;gap:6px;flex-wrap:wrap}
+.vc{border:1.5px solid currentColor;border-radius:8px;padding:1px 8px;font-size:14px;font-weight:600}
+.kc.on .vc{opacity:.45}
+.kc.on .vc.on{opacity:1;background:#c4161c;color:#fff;border-color:#c4161c;font-weight:800;font-size:16px}
+.kx{margin-top:10px;background:#fff3bf;color:#5c4400;padding:8px 12px;border-radius:8px}
+@media (max-width:900px){.kw{flex-direction:column}.kq{flex:none;position:static;flex-direction:row;overflow:auto;max-height:none;width:100%}.qi{min-width:150px}.kmap{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -298,24 +327,46 @@ function setV(v){document.body.dataset.v=v;$("toAdmin").style.display=(role==="b
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:0;color:var(--mute)">選擇身分，輸入數字密碼</p><div class="seg"><button data-r="f" class="on">前台</button><button data-r="k">廚房</button><button data-r="b">後台</button></div><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 2.7</p></div>';dots()}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:0;color:var(--mute)">選擇身分，輸入數字密碼</p><div class="seg"><button data-r="f" class="on">前台</button><button data-r="k">廚房</button><button data-r="b">後台</button></div><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 2.8</p></div>';dots()}
 function enter(){if(role==="f"){setV("front");loadMenu()}else if(role==="k"){lastP=-1;setV("kitchen");kLoad()}else{setV("admin");renderAdmin()}}
 function tryLogin(){if(!pin)return;var btn=$("lg");btn.disabled=true;btn.textContent="登入中…";
  call("login",[sel,pin],function(res){token=res.token;role=res.role;pin="";enter()},function(m){btn.disabled=false;btn.textContent="登入";$("err").textContent=m;pin="";dots()},true)}
-function logout(){guest=false;document.body.classList.remove("guest");$("gt").textContent="";if(token&&API_URL.indexOf("https://script.google.com/")===0)post("logout",[token]).catch(function(){});token=null;role=null;cart={};table=null;MENU=[];closeOv();$("cart").classList.remove("open");loginUI();setV("login");render()}
+function logout(){guest=false;document.body.classList.remove("guest");$("gt").textContent="";if(token&&API_URL.indexOf("https://script.google.com/")===0)post("logout",[token]).catch(function(){});token=null;role=null;cart={};table=null;MENU=[];KMENU=[];closeOv();$("cart").classList.remove("open");loginUI();setV("login");render()}
 $("login").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.dataset.r){sel=b.dataset.r;[].forEach.call(b.parentNode.children,function(x){x.classList.toggle("on",x===b)});$("err").textContent=""}else if(b.dataset.k)press(b.dataset.k);else if(b.id==="lg")tryLogin()};
 document.addEventListener("keydown",function(e){if(document.body.dataset.v!=="login")return;if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==="Backspace")press("x");else if(e.key==="Enter")tryLogin()});
 $("out").onclick=logout;
 $("toAdmin").onclick=function(){setV("admin");renderAdmin()};
 /* ---------- 廚房 ---------- */
 function beep(){try{var a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator();o.frequency.value=880;o.connect(a.destination);o.start();setTimeout(function(){o.stop();a.close()},350)}catch(x){}}
-function kLoad(quiet){call("getKitchen",[],kDraw,quiet?function(){}:function(m){$("kitchen").innerHTML='<div class="empty">'+esc(m)+'</div>'})}
+var KMENU=[],KO=[],kSel=0,KT=0;
+var LAY=[["純湯底","藥膳湯底","肉品","蔬菇","飲料"],["海鮮","鍋料","素食湯底"]],CC={"純湯底":2,"蔬菇":3,"鍋料":2};
 var NXT={"待處理":["製作中","開始製作"],"製作中":["待送餐","完成出餐"],"待送餐":["已送達","已送達客人"]};
-function ticket(o){var late=o.mins>=15&&o.status==="待處理",n=NXT[o.status];return'<div class="tk'+(o.status==="製作中"?" mk":o.status==="待送餐"?" rd":late?" late":"")+'"><div class="th"><span>#'+esc(o.no)+" · "+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+(o.addon?' <span class="tag">追加</span>':"")+'</span><span>'+o.mins+' 分</span></div><ul style="padding:0;margin:8px 0">'+o.lines.map(function(l){return"<li>"+esc(l.n)+(l.l?"（"+esc(l.l)+"）":"")+" × <b>"+l.q+"</b></li>"}).join("")+"</ul>"+(o.note?'<div class="nt">備註：'+esc(o.note)+"</div>":"")+'<button data-row="'+o.row+'" data-no="'+esc(o.no)+'" data-s="'+n[0]+'">'+n[1]+"</button></div>"}
-function kDraw(d){var g=function(t){return d.orders.filter(function(o){return o.status===t})},p=g("待處理"),m=g("製作中"),r=g("待送餐");
- if(lastP>=0&&p.length>lastP)beep();lastP=p.length;if(lastR>=0&&r.length>lastR)beep();lastR=r.length;
- $("kitchen").innerHTML='<div class="ah"><h1>廚房／送餐</h1><span class="sp"></span>'+(role==="b"?'<button id="kBack">回後台</button>':"")+'<button id="kOut">登出</button></div><div class="kb">'+[["待處理",p],["製作中",m],["待送餐",r]].map(function(c){return"<div><h2>"+c[0]+"（"+c[1].length+"）</h2>"+(c[1].map(ticket).join("")||'<div class="empty">沒有訂單</div>')+"</div>"}).join("")+"</div>"}
-$("kitchen").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.id==="kOut")logout();else if(b.id==="kBack"){setV("admin");renderAdmin()}else if(b.dataset.row){b.disabled=true;call("setStatus",[+b.dataset.row,b.dataset.no,b.dataset.s],function(){kLoad()},function(m){alert(m);kLoad()})}};
+function kLoad(quiet){var bad2=function(m){$("kitchen").innerHTML='<div class="empty">'+esc(m)+"</div>"},go=function(){call("getKitchen",[],kDraw,quiet?function(){}:bad2)};
+ if(!KMENU.length||Date.now()-KT>60000)call("getMenu",[],function(m){KMENU=m;KT=Date.now();go()},quiet?go:bad2);else go()}
+function kmap(o){var byId={},byN={},hit={},extra=[];
+ KMENU.forEach(function(c){c.items.forEach(function(it){byId[it.id]=it;byN[it.n]=it})});
+ o.lines.forEach(function(l){var it=(l.id&&byId[l.id])||byN[l.n],lb=l.l||"";if(it&&it.v.some(function(v){return v.l===lb})){var k=it.id+"|"+lb;hit[k]=(hit[k]||0)+l.q}else extra.push(l)});
+ var names=KMENU.map(function(c){return c.t}),cols=[[],[]],all=LAY[0].concat(LAY[1]);
+ LAY.forEach(function(a,i){a.forEach(function(t){if(names.indexOf(t)>-1)cols[i].push(t)})});
+ var wt=function(i){return cols[i].reduce(function(s,t){return s+KMENU[names.indexOf(t)].items.length},0)};
+ names.forEach(function(t){if(all.indexOf(t)<0)cols[wt(0)<=wt(1)?0:1].push(t)});
+ var sec=function(t){var c=KMENU[names.indexOf(t)],n=0,nc=CC[t]||1,rows=Math.ceil(c.items.length/nc);
+  var cells=c.items.map(function(it){var multi=it.v.length>1||!!it.v[0].l,tot=0,ch="";
+   it.v.forEach(function(v){var q=hit[it.id+"|"+v.l]||0;tot+=q;if(multi)ch+='<span class="vc'+(q?" on":"")+'">'+esc(v.l)+(q?" ×"+q:"")+"</span>"});
+   n+=tot;
+   return'<div class="kc'+(tot?" on":"")+(multi?" mv":"")+'"><span class="kn">'+(multi?"":(tot?"☑ ":"☐ "))+esc(it.n)+"</span>"+(multi?'<span class="vcs">'+ch+"</span>":(tot?'<b class="qt">×'+tot+"</b>":""))+"</div>"}).join("");
+  return'<section class="ks'+(n?" has":"")+'"><h4><span>'+esc(t)+"</span>"+(n?'<b class="sn">'+n+"</b>":"")+'</h4><div class="kg" style="grid-template-columns:repeat('+nc+',1fr);grid-template-rows:repeat('+rows+',auto)">'+cells+"</div></section>"};
+ return'<div class="kmap">'+cols.map(function(a){return'<div class="kcol">'+a.map(sec).join("")+"</div>"}).join("")+"</div>"+(extra.length?'<div class="kx"><b>其他（不在目前菜單）：</b>'+extra.map(function(l){return esc(l.n)+(l.l?"（"+esc(l.l)+"）":"")+" × "+l.q}).join("、")+"</div>":"")}
+function kfocus(o){var n=NXT[o.status];return'<div class="fh"><div><span class="fn">#'+esc(o.no)+'</span><span class="ft">'+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'<span class="fm">'+o.mins+" 分鐘 · "+o.status+'</span></div><button class="act" data-row="'+o.row+'" data-no="'+esc(o.no)+'" data-s="'+n[0]+'">'+n[1]+"</button></div>"+(o.note?'<div class="nt big">備註：'+esc(o.note)+"</div>":"")+kmap(o)}
+function kDraw(d){var pr={"待處理":0,"製作中":1,"待送餐":2},cnt=function(t){return d.orders.filter(function(o){return o.status===t}).length};
+ KO=d.orders.slice().sort(function(a,b){return pr[a.status]-pr[b.status]||a.row-b.row});
+ var p=cnt("待處理"),m=cnt("製作中"),r=cnt("待送餐");
+ if(lastP>=0&&p>lastP)beep();lastP=p;if(lastR>=0&&r>lastR)beep();lastR=r;
+ if(!KO.some(function(o){return o.row===kSel}))kSel=KO.length?KO[0].row:0;
+ var sel=KO.filter(function(o){return o.row===kSel})[0],st=$("kitchen").scrollTop,qs=$("kitchen").querySelector(".kq"),qt=qs?qs.scrollTop:0;
+ $("kitchen").innerHTML='<div class="ah"><h1>廚房／送餐</h1><span class="tag">待處理 '+p+'</span><span class="tag">製作中 '+m+'</span><span class="tag">待送餐 '+r+'</span><span class="sp"></span>'+(role==="b"?'<button id="kBack">回後台</button>':"")+'<button id="kOut">登出</button></div><div class="kw"><div class="kq">'+(KO.map(function(o){return'<button class="qi st'+pr[o.status]+(o.row===kSel?" sel":"")+'" data-q="'+o.row+'"><b>#'+esc(o.no)+"</b> "+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+(o.addon?" ・追加":"")+"<small>"+o.status+" · "+o.mins+" 分 · "+o.lines.reduce(function(s,l){return s+l.q},0)+" 項</small></button>"}).join("")||'<div class="empty">沒有訂單</div>')+'</div><div class="kf">'+(sel?kfocus(sel):'<div class="empty">目前沒有需要處理的訂單</div>')+"</div></div>";
+ $("kitchen").scrollTop=st;var q2=$("kitchen").querySelector(".kq");if(q2)q2.scrollTop=qt}
+$("kitchen").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.id==="kOut")logout();else if(b.id==="kBack"){setV("admin");renderAdmin()}else if(b.dataset.q){kSel=+b.dataset.q;kDraw({orders:KO})}else if(b.dataset.row){b.disabled=true;call("setStatus",[+b.dataset.row,b.dataset.no,b.dataset.s],function(){kLoad()},function(m){alert(m);kLoad()})}};
 setInterval(function(){if(document.body.dataset.v==="kitchen")kLoad(true)},10000);
 setInterval(function(){if(document.body.dataset.v==="front"&&!$("ov").classList.contains("show"))loadMenu(true)},90000);
 /* ---------- 後台 ---------- */
