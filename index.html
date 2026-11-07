@@ -125,7 +125,13 @@ body[data-v="kitchen"] #app{display:none}
 body[data-v="kitchen"] #kitchen{display:block}
 #kitchen .ah button{background:#2a1d1a;color:#f6e9e2;border-color:#46342f}
 #kitchen .empty{color:#b3a199}
-.kb{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kb{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tk.rd{border-left-color:#4aa3ff}
+.pdlg{width:min(760px,100%)}
+.pg{background:var(--bg);border-radius:12px;padding:12px;margin-bottom:12px}
+.pg h4{margin:0 0 8px;font-size:20px}
+.pm{display:flex;gap:8px;margin-top:8px}
+.pm button{flex:1;height:54px;border-radius:12px;background:var(--red);color:#fff;font-weight:800;font-size:18px}
 .kb h2{margin:0 0 10px;font-size:22px}
 .tk{background:#2a1d1a;border-radius:14px;padding:14px;margin-bottom:12px;border-left:8px solid #ffd52e}
 .tk.late{border-left-color:#ff5a5f}.tk.mk{border-left-color:#4cc38a}
@@ -159,7 +165,7 @@ h3{margin:18px 0 8px}
 .dlg label.fl{display:inline-flex;margin:0}
 #exitGuest{display:none}
 body.guest #exitGuest{display:inline-block}
-body.guest #toGuest,body.guest #out,body.guest #toAdmin,body.guest .tip,body.guest .mode{display:none!important}
+body.guest #toPay,body.guest #toGuest,body.guest #out,body.guest #toAdmin,body.guest .tip,body.guest .mode{display:none!important}
 body.guest .grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
 body.guest .card .nm{font-size:22px}
 body.guest nav button{font-size:20px;padding:22px 8px}
@@ -176,12 +182,13 @@ body.guest nav button{font-size:20px;padding:22px 8px}
 .zm .vs button{min-width:140px;padding:16px}
 .xz{position:absolute;top:10px;right:10px;width:48px;height:48px;border-radius:24px;background:rgba(0,0,0,.6);color:#fff;font-size:22px;z-index:2}
 #zoom{z-index:25}
+.seg small{display:block;font-weight:400;font-size:14px;opacity:.85;margin-top:4px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body data-v="login">
 <div id="app">
- <header><h1>鮮味愛喝湯 <small id="gt"></small></h1><span class="hr"><span class="tip">點選品項加入 · 右側確認後送出</span><button class="hb" id="toGuest">客人點餐</button><button class="hb" id="toAdmin">回後台</button><button class="hb" id="exitGuest">🔒 店員</button><button class="hb" id="out">登出</button></span></header>
+ <header><h1>鮮味愛喝湯 <small id="gt"></small></h1><span class="hr"><span class="tip">點選品項加入 · 右側確認後送出</span><button class="hb" id="toPay">結帳</button><button class="hb" id="toGuest">客人點餐</button><button class="hb" id="toAdmin">回後台</button><button class="hb" id="exitGuest">🔒 店員</button><button class="hb" id="out">登出</button></span></header>
  <nav id="nav" aria-label="菜單分類"></nav>
  <main id="main"></main>
  <aside id="cart">
@@ -201,9 +208,10 @@ body.guest nav button{font-size:20px;padding:22px 8px}
 <div id="admin"></div>
 <div id="kitchen"></div>
 <div class="ov" id="zoom"></div>
+<div class="ov" id="pay"></div>
 <script>
 window.addEventListener("error",function(e){alert("發生錯誤："+e.message)});
-var guest=false,zi=null,MENU=[],cat=0,mode="內用",table=null,cart={},token=null,role=null,sel="f",pin="",tab="orders",lastP=-1,dE=null,MA=null;
+var lastR=-1,guest=false,zi=null,MENU=[],cat=0,mode="內用",table=null,cart={},token=null,role=null,sel="f",pin="",tab="orders",lastP=-1,dE=null,MA=null;
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 var API_URL="https://script.google.com/macros/s/AKfycbxVgWd3tKKGkidfE8PuJOMj3fExsQZZZW0iVJspg4KUtgZCglxqrl7Lokxspd095ehgYg/exec";
@@ -259,13 +267,14 @@ $("dlg").onclick=function(e){var b=e.target.closest("button");if(!b)return;var i
  if(b.dataset.t){table=+b.dataset.t;[].forEach.call($("tbl").children,function(x){x.classList.toggle("on",x===b)})}
  else if(b.dataset.g)startGuest(+b.dataset.g);
  else if(i==="xok"){b.disabled=true;call("login",[role==="b"?"b":"f",$("xp").value],function(){endGuest();closeOv()},function(m){b.disabled=false;$("xe").textContent=m},true)}
+ else if(i==="gopay"){closeOv();openPay()}
  else if(i==="back"||i==="done"||i==="mCancel")closeOv();
  else if(i==="send"){
   if(mode==="內用"&&!table){alert("請先選擇桌號");return}
   var note=$("note").value,lines=Object.keys(cart).map(function(k){return cart[k]});
   b.disabled=true;b.textContent="送出中…";
   call("submitOrder",[{mode:mode,table:table,note:note,lines:lines.map(function(r){return{id:r.id,l:r.l,q:r.q}})}],function(res){
-   $("dlg").innerHTML='<div class="ok"><h3>訂單已送出</h3><div>'+(mode==="內用"?"桌號 "+table:"外帶")+'</div><div class="no">#'+esc(res.no)+'</div><ul>'+lines.map(function(r){return"<li><span>"+esc(r.n)+(r.l?"（"+esc(r.l)+"）":"")+" × "+r.q+"</span><span>$"+r.p*r.q+"</span></li>"}).join("")+"</ul>"+(note?"<div>備註："+esc(note)+"</div>":"")+'<div class="tot" style="margin-top:12px"><span>合計</span><b>$'+res.total+'</b></div><div class="acts"><button class="go" id="done">完成，開始下一單</button></div></div>';
+   $("dlg").innerHTML='<div class="ok"><h3>訂單已送出</h3><div>'+(mode==="內用"?"桌號 "+table:"外帶")+'</div><div class="no">#'+esc(res.no)+'</div>'+(res.addon?'<div class="tag">追加單：此桌尚有未結帳訂單，結帳時一併計算</div>':"")+(res.pre?'<div class="warn">'+(guest?"請到櫃台結帳，付款後才會開始製作":"餐前結帳：請先收款，收款後才會送到廚房")+'</div>':"")+'<ul>'+lines.map(function(r){return"<li><span>"+esc(r.n)+(r.l?"（"+esc(r.l)+"）":"")+" × "+r.q+"</span><span>$"+r.p*r.q+"</span></li>"}).join("")+"</ul>"+(note?"<div>備註："+esc(note)+"</div>":"")+'<div class="tot" style="margin-top:12px"><span>合計</span><b>$'+res.total+'</b></div><div class="acts">'+(res.pre&&!guest?'<button class="ghost" id="gopay">前往結帳</button>':"")+'<button class="go" id="done">完成，開始下一單</button></div></div>';
    cart={};if(!guest)table=null;$("cart").classList.remove("open");render()
   },function(m){b.disabled=false;b.textContent="重新送出";alert(m);loadMenu(true)})}
  else if(i==="mAddV"){syncE();dE.v.push({l:"",p:""});eDraw()}
@@ -289,7 +298,7 @@ function setV(v){document.body.dataset.v=v;$("toAdmin").style.display=(role==="b
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:0;color:var(--mute)">選擇身分，輸入數字密碼</p><div class="seg"><button data-r="f" class="on">前台</button><button data-r="k">廚房</button><button data-r="b">後台</button></div><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 2.5</p></div>';dots()}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:0;color:var(--mute)">選擇身分，輸入數字密碼</p><div class="seg"><button data-r="f" class="on">前台</button><button data-r="k">廚房</button><button data-r="b">後台</button></div><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 2.7</p></div>';dots()}
 function enter(){if(role==="f"){setV("front");loadMenu()}else if(role==="k"){lastP=-1;setV("kitchen");kLoad()}else{setV("admin");renderAdmin()}}
 function tryLogin(){if(!pin)return;var btn=$("lg");btn.disabled=true;btn.textContent="登入中…";
  call("login",[sel,pin],function(res){token=res.token;role=res.role;pin="";enter()},function(m){btn.disabled=false;btn.textContent="登入";$("err").textContent=m;pin="";dots()},true)}
@@ -301,24 +310,25 @@ $("toAdmin").onclick=function(){setV("admin");renderAdmin()};
 /* ---------- 廚房 ---------- */
 function beep(){try{var a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator();o.frequency.value=880;o.connect(a.destination);o.start();setTimeout(function(){o.stop();a.close()},350)}catch(x){}}
 function kLoad(quiet){call("getKitchen",[],kDraw,quiet?function(){}:function(m){$("kitchen").innerHTML='<div class="empty">'+esc(m)+'</div>'})}
-function ticket(o){var late=o.mins>=15&&o.status==="待處理";return'<div class="tk'+(o.status==="製作中"?" mk":late?" late":"")+'"><div class="th"><span>#'+esc(o.no)+" · "+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+'</span><span>'+o.mins+' 分</span></div><ul style="padding:0;margin:8px 0">'+o.lines.map(function(l){return"<li>"+esc(l.n)+(l.l?"（"+esc(l.l)+"）":"")+" × <b>"+l.q+"</b></li>"}).join("")+"</ul>"+(o.note?'<div class="nt">備註：'+esc(o.note)+"</div>":"")+'<button data-row="'+o.row+'" data-no="'+esc(o.no)+'" data-s="'+(o.status==="待處理"?"製作中":"完成")+'">'+(o.status==="待處理"?"開始製作":"完成出餐")+"</button></div>"}
-function kDraw(d){var p=d.orders.filter(function(o){return o.status==="待處理"}),m=d.orders.filter(function(o){return o.status==="製作中"});
- if(lastP>=0&&p.length>lastP)beep();lastP=p.length;
- $("kitchen").innerHTML='<div class="ah"><h1>廚房接單</h1><span class="sp"></span>'+(role==="b"?'<button id="kBack">回後台</button>':"")+'<button id="kOut">登出</button></div><div class="kb"><div><h2>待處理（'+p.length+'）</h2>'+(p.map(ticket).join("")||'<div class="empty">沒有待處理訂單</div>')+'</div><div><h2>製作中（'+m.length+'）</h2>'+(m.map(ticket).join("")||'<div class="empty">沒有製作中的訂單</div>')+"</div></div>"}
+var NXT={"待處理":["製作中","開始製作"],"製作中":["待送餐","完成出餐"],"待送餐":["已送達","已送達客人"]};
+function ticket(o){var late=o.mins>=15&&o.status==="待處理",n=NXT[o.status];return'<div class="tk'+(o.status==="製作中"?" mk":o.status==="待送餐"?" rd":late?" late":"")+'"><div class="th"><span>#'+esc(o.no)+" · "+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+(o.addon?' <span class="tag">追加</span>':"")+'</span><span>'+o.mins+' 分</span></div><ul style="padding:0;margin:8px 0">'+o.lines.map(function(l){return"<li>"+esc(l.n)+(l.l?"（"+esc(l.l)+"）":"")+" × <b>"+l.q+"</b></li>"}).join("")+"</ul>"+(o.note?'<div class="nt">備註：'+esc(o.note)+"</div>":"")+'<button data-row="'+o.row+'" data-no="'+esc(o.no)+'" data-s="'+n[0]+'">'+n[1]+"</button></div>"}
+function kDraw(d){var g=function(t){return d.orders.filter(function(o){return o.status===t})},p=g("待處理"),m=g("製作中"),r=g("待送餐");
+ if(lastP>=0&&p.length>lastP)beep();lastP=p.length;if(lastR>=0&&r.length>lastR)beep();lastR=r.length;
+ $("kitchen").innerHTML='<div class="ah"><h1>廚房／送餐</h1><span class="sp"></span>'+(role==="b"?'<button id="kBack">回後台</button>':"")+'<button id="kOut">登出</button></div><div class="kb">'+[["待處理",p],["製作中",m],["待送餐",r]].map(function(c){return"<div><h2>"+c[0]+"（"+c[1].length+"）</h2>"+(c[1].map(ticket).join("")||'<div class="empty">沒有訂單</div>')+"</div>"}).join("")+"</div>"}
 $("kitchen").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.id==="kOut")logout();else if(b.id==="kBack"){setV("admin");renderAdmin()}else if(b.dataset.row){b.disabled=true;call("setStatus",[+b.dataset.row,b.dataset.no,b.dataset.s],function(){kLoad()},function(m){alert(m);kLoad()})}};
 setInterval(function(){if(document.body.dataset.v==="kitchen")kLoad(true)},10000);
 setInterval(function(){if(document.body.dataset.v==="front"&&!$("ov").classList.contains("show"))loadMenu(true)},90000);
 /* ---------- 後台 ---------- */
-var TABS=[["orders","訂單紀錄"],["report","日報表"],["menu","菜單管理"],["set","密碼設定"]];
+var TABS=[["orders","訂單紀錄"],["report","日報表"],["menu","菜單管理"],["set","設定"]];
 function renderAdmin(){$("admin").innerHTML='<div class="ah"><h1>後台管理</h1><span class="sp"></span><button class="pri" id="aFront">點餐畫面</button><button id="aKit">廚房畫面</button><button id="aOut">登出</button></div><div class="tabs">'+TABS.map(function(t){return'<button data-tab="'+t[0]+'" class="'+(t[0]===tab?"on":"")+'">'+t[1]+"</button>"}).join("")+'</div><div id="tb"><div class="empty">載入中…</div></div>';
  ({orders:tOrders,report:function(){tReport("")},menu:tMenu,set:tSet})[tab]()}
 function bad(m){$("tb").innerHTML='<div class="empty">'+esc(m)+"</div>"}
-function tOrders(){call("getAdmin",[],function(d){$("tb").innerHTML='<div class="stats"><div>今日訂單<b>'+d.todayCount+'</b></div><div>今日營業額<b>$'+d.todaySum+'</b></div><div>累計營業額<b>$'+d.sum+'</b></div></div><div class="ah"><h2 style="margin:0">訂單紀錄（最近 200 筆）</h2><span class="sp"></span><button id="aRef">重新整理</button><button id="aClr">清除全部訂單</button></div>'+(d.orders.length?d.orders.map(function(o){return'<div class="ord"><div class="oh"><span>#'+esc(o.no)+' · '+(o.mode==="內用"?"桌號 "+esc(o.table):"外帶")+' <span class="tag">'+esc(o.status)+'</span></span><span>$'+o.total+'</span></div><p>'+esc(o.time)+'</p><p>'+esc(o.items)+'</p>'+(o.note?'<p>備註：'+esc(o.note)+'</p>':'')+'</div>'}).join(""):'<div class="empty">尚無訂單</div>')},bad)}
+function tOrders(){call("getAdmin",[],function(d){$("tb").innerHTML='<div class="stats"><div>今日訂單<b>'+d.todayCount+'</b></div><div>今日營業額<b>$'+d.todaySum+'</b></div><div>累計營業額<b>$'+d.sum+'</b></div><div>未收款<b>$'+d.unpaid+'</b></div></div><div class="ah"><h2 style="margin:0">訂單紀錄（最近 200 筆）</h2><span class="sp"></span><button id="aRef">重新整理</button><button id="aClr">清除全部訂單</button></div>'+(d.orders.length?d.orders.map(function(o){return'<div class="ord"><div class="oh"><span>#'+esc(o.no)+' · '+(o.mode==="內用"?"桌號 "+esc(o.table):"外帶")+' <span class="tag">'+esc(o.status)+'</span> <span class="tag">'+(o.paid?"已收款（"+esc(o.method)+"）":"未收款")+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'</span><span>$'+o.total+'</span></div><p>'+esc(o.time)+'</p><p>'+esc(o.items)+'</p>'+(o.note?'<p>備註：'+esc(o.note)+'</p>':'')+(o.status!=="取消"?'<button class="tg" data-vd="'+o.row+'" data-no="'+esc(o.no)+'">作廢</button>':"")+'</div>'}).join(""):'<div class="empty">尚無訂單</div>')},bad)}
 function tReport(dt){call("getReport",[dt],function(d){var mx=Math.max.apply(null,d.week.map(function(x){return x.s}).concat([1])),mq=d.top.length?d.top[0].q:1;
  $("tb").innerHTML='<div class="ah"><input type="date" id="rd" value="'+d.date+'" class="dt"><h2 style="margin:0">'+d.date+' 日報表</h2></div><div class="stats"><div>訂單數<b>'+d.count+'</b></div><div>營業額<b>$'+d.sum+'</b></div><div>平均客單<b>$'+d.avg+'</b></div></div><div class="stats"><div>內用<b>'+d.dine.c+' 筆</b>$'+d.dine.s+'</div><div>外帶<b>'+d.take.c+' 筆</b>$'+d.take.s+'</div></div><h3>熱銷品項</h3>'+(d.top.length?'<table class="tb"><tr><th>品項</th><th></th><th>數量</th><th>金額</th></tr>'+d.top.map(function(x){return"<tr><td>"+esc(x.n)+'</td><td style="width:30%"><div class="bar" style="width:'+Math.round(x.q/mq*100)+'%"></div></td><td>'+x.q+"</td><td>$"+x.s+"</td></tr>"}).join("")+"</table>":'<div class="empty">這天沒有品項明細</div>')+'<h3>近 7 日營業額</h3><table class="tb">'+d.week.map(function(x){return"<tr><td>"+x.d.slice(5)+'</td><td style="width:55%"><div class="bar" style="width:'+Math.round(x.s/mx*100)+'%"></div></td><td>'+x.c+" 筆</td><td>$"+x.s+"</td></tr>"}).join("")+"</table>"},bad)}
 function tMenu(){call("getMenuAdmin",[],function(d){MA=d;var names=d.cats.map(function(c){return c.t});d.items.forEach(function(i){if(names.indexOf(i.c)<0)names.push(i.c)});
  $("tb").innerHTML='<div class="ah"><h2 style="margin:0">菜單管理</h2><span class="sp"></span><button class="pri" id="mNew">＋新增品項</button></div>'+names.map(function(n){var its=d.items.filter(function(i){return i.c===n});return its.length?"<h3>"+esc(n)+"</h3>"+its.map(function(i){return'<div class="mi'+(i.on?"":" off")+'">'+(i.img?imgTag(i.img,120):'<div class="ph">'+ic(i,i.c)+'</div>')+'<div class="nm">'+esc(i.n)+"<small>"+i.v.map(function(v){return(v.l?esc(v.l)+" ":"")+"$"+v.p}).join(" / ")+'</small></div><button class="tg'+(i.on?" on":"")+'" data-tg="'+i.id+'" data-on="'+(i.on?1:0)+'">'+(i.on?"供應中":"已下架")+'</button><button class="tg" data-ed="'+i.id+'">編輯</button></div>'}).join(""):""}).join("")},bad)}
-function tSet(){$("tb").innerHTML='<div class="pwf"><label>前台密碼<input id="pf" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><label>廚房密碼<input id="pk" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><label>後台密碼<input id="pb" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><button id="aSave">更改密碼</button></div>'}
+function tSet(){call("getSettings",[],function(d){var pm=function(k,t,x){return'<button data-pm="'+k+'" class="'+(d.payMode===k?"on":"")+'">'+t+"<small>"+x+"</small></button>"};$("tb").innerHTML='<h3>結帳方式</h3><div class="seg">'+pm("after","餐後結帳","先出餐，客人吃完再到櫃台結帳")+pm("before","餐前結帳","先收款，收款後訂單才送到廚房")+'</div><p style="color:var(--mute);font-size:15px">切換後只影響新訂單；已送出但尚未付款的訂單，仍需先收款。</p><h3>密碼</h3>'+'<div class="pwf"><label>前台密碼<input id="pf" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><label>廚房密碼<input id="pk" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><label>後台密碼<input id="pb" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><button id="aSave">更改密碼</button></div>'},bad)}
 $("admin").oninput=function(e){if(/^p[fkb]$/.test(e.target.id))e.target.value=e.target.value.replace(/\D/g,"")};
 $("admin").onchange=function(e){if(e.target.id==="rd"&&e.target.value)tReport(e.target.value)};
 $("admin").onclick=function(e){var b=e.target.closest("button");if(!b)return;var i=b.id;
@@ -330,7 +340,9 @@ $("admin").onclick=function(e){var b=e.target.closest("button");if(!b)return;var
  else if(i==="mNew")openEdit("");
  else if(b.dataset.ed)openEdit(b.dataset.ed);
  else if(b.dataset.tg){b.disabled=true;call("setItemOn",[b.dataset.tg,b.dataset.on!=="1"],tMenu,function(m){alert(m);tMenu()})}
+ else if(b.dataset.pm){call("setPayMode",[b.dataset.pm],function(){alert("已切換為"+(b.dataset.pm==="before"?"餐前結帳":"餐後結帳"));tSet()})}
  else if(i==="aSave"){var v=["pf","pk","pb"].map(function(x){return $(x).value});if(v.some(function(x){return x&&!/^\d{4,8}$/.test(x)})){alert("密碼需為 4–8 位數字");return}call("setPasswords",v,function(){alert("密碼已更新");tSet()})}
+ else if(b.dataset.vd){if(confirm("確定作廢 #"+b.dataset.no+"？作廢後不計入營業額。"))call("voidOrder",[+b.dataset.vd,b.dataset.no],tOrders)}
  else if(i==="aClr"){if(confirm("確定清除全部訂單紀錄？此動作無法復原。"))call("clearOrders",[],tOrders)}};
 function startGuest(n){guest=true;table=n;mode="內用";cart={};document.body.classList.add("guest");$("gt").textContent="· 桌號 "+n;closeOv();render()}
 function endGuest(){guest=false;table=null;cart={};document.body.classList.remove("guest");$("gt").textContent="";render()}
@@ -338,6 +350,13 @@ $("toGuest").onclick=function(){var h='<h3>客人點餐：選擇桌號</h3><div 
 $("exitGuest").onclick=function(){$("dlg").innerHTML='<h3>店員驗證</h3><input id="xp" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="輸入前台密碼" autocomplete="off"><div class="err" id="xe"></div><div class="acts"><button class="ghost" id="back">取消</button><button class="go" id="xok">確認</button></div>';$("ov").classList.add("show");setTimeout(function(){$("xp").focus()},50)};
 $("dlg").oninput=function(e){if(e.target.id==="xp")e.target.value=e.target.value.replace(/\D/g,"")};
 $("zoom").onclick=function(e){var b=e.target.closest("button[data-v]");if(b){var v=zi.v[+b.dataset.v];add(zi.id,zi.n,v.l,v.p,1);$("zoom").classList.remove("show");return}if(e.target===$("zoom")||e.target.closest("#zx"))$("zoom").classList.remove("show")};
+var PG=[],PM="after";
+function openPay(){$("pay").innerHTML='<div class="dlg pdlg"><div class="ah"><h3 style="margin:0">結帳</h3><span class="tag" id="pmt"></span><span class="sp"></span><button class="ghost" id="pr">重新整理</button><button class="ghost" id="px">關閉</button></div><div id="pb2"><div class="empty">載入中…</div></div></div>';$("pay").classList.add("show");loadPay()}
+function loadPay(){call("getTabs",[],function(d){PG=d.groups;PM=d.payMode;$("pmt").textContent=PM==="before"?"餐前結帳":"餐後結帳";$("pb2").innerHTML=PG.length?PG.map(function(g,gi){return'<div class="pg"><h4>'+esc(g.label)+(PM==="after"&&g.orders.some(function(o){return o.status!=="已送達"})?' <span class="tag">尚有餐點未送達</span>':"")+'</h4>'+g.orders.map(function(o){return'<div class="oh" style="font-weight:500"><span>#'+esc(o.no)+" "+esc(o.time)+' <span class="tag">'+esc(o.status)+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'</span><span>$'+o.total+'</span></div><p style="margin:2px 0 8px;color:var(--mute);font-size:15px">'+esc(o.items)+"</p>"}).join("")+'<div class="tot"><span>合計</span><b>$'+g.sum+'</b></div><div class="pm">'+["現金","行動支付","信用卡"].map(function(m){return'<button data-pg="'+gi+'" data-m="'+m+'">'+m+" 收款</button>"}).join("")+"</div></div>"}).join(""):'<div class="empty">沒有未結帳的訂單</div>'},function(m){$("pb2").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
+$("toPay").onclick=openPay;
+$("pay").onclick=function(e){var b=e.target.closest("button");if(!b){if(e.target===$("pay"))$("pay").classList.remove("show");return}
+ if(b.id==="px")$("pay").classList.remove("show");else if(b.id==="pr")loadPay();
+ else if(b.dataset.pg){var g=PG[+b.dataset.pg];if(!confirm(g.label+" 合計 $"+g.sum+"，以「"+b.dataset.m+"」收款？"))return;b.disabled=true;call("payOrders",[g.orders.map(function(o){return{row:o.row,no:o.no}}),b.dataset.m],loadPay,function(m){alert(m);loadPay()})}};
 loginUI();setV("login");render();
 </script>
 </body>
