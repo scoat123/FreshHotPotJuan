@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鮮味愛喝湯 點餐系統</title>
+    <style>
+        /* 這裡可以放入原本的 CSS 樣式，以下為基礎排版範例 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .nav-buttons button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .main-content {
+            display: flex;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .menu-section {
+            flex: 1;
+        }
+        .order-section {
+            width: 250px;
+            border-left: 1px solid #ccc;
+            padding-left: 20px;
+        }
+        .total-price {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #d9534f;
+            margin: 15px 0;
+        }
+        .action-buttons button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 頁首與導覽 -->
+    <div class="header">
+        <h1>鮮味愛喝湯</h1>
+        <div class="nav-buttons">
+            <button onclick="switchRole('customer')">客人點餐</button>
+            <button onclick="goToBackend()">回後台 🔒</button>
+            <button onclick="switchRole('staff')">店員</button>
+            <button onclick="logout()">登出</button>
+        </div>
+    </div>
+
+    <!-- 主要操作區 -->
+    <div class="main-content">
+        <!-- 左側：品項點選區 -->
+        <div class="menu-section">
+            <h3>點選品項加入</h3>
+            <p>（請在此處填入原本的湯品、餐點按鈕清單...）</p>
+            <!-- 範例品項 -->
+            <!-- <button onclick="addToCart('鮮魚湯', 100)">鮮魚湯 $100</button> -->
+        </div>
+
+        <!-- 右側：確認與送出區 -->
+        <div class="order-section">
+            <h3>右側確認後送出</h3>
+            
+            <div id="cart-status">尚未點餐</div>
+            <div id="order-list">
+                <!-- 點選的品項會顯示在這裡 -->
+            </div>
+
+            <div class="total-price">
+                合計 <span id="total-amount">$0</span>
+            </div>
+
+            <div class="action-buttons">
+                <button onclick="toggleOrders()">收起訂單</button>
+                <button onclick="viewOrders()">查看訂單</button>
+                <button onclick="clearCart()" style="background-color: #f0ad4e; color: white; border: none;">清空</button>
+                <button onclick="submitOrder()" style="background-color: #5cb85c; color: white; border: none;">送出訂單</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 這裡改用純前端的 JavaScript 控制網頁行為
+    let cart = [];
+    let total = 0;
+
+    // 範例：加入購物車功能
+    function addToCart(itemName, price) {
+        cart.push({ name: itemName, price: price });
+        updateCartUI();
+    }
+
+    // 更新右側購物車畫面
+    function updateCartUI() {
+        const statusEl = document.getElementById('cart-status');
+        const listEl = document.getElementById('order-list');
+        const totalEl = document.getElementById('total-amount');
+
+        if (cart.length === 0) {
+            statusEl.innerText = '尚未點餐';
+            listEl.innerHTML = '';
+            totalEl.innerText = '$0';
+            return;
+        }
+
+        statusEl.innerText = '已選擇品項：';
+        listEl.innerHTML = cart.map(item => `<div>${item.name} - $${item.price}</div>`).join('');
+        
+        total = cart.reduce((sum, item) => sum + item.price, 0);
+        totalEl.innerText = `$${total}`;
+    }
+
+    // 清空購物車
+    function clearCart() {
+        cart = [];
+        updateCartUI();
+    }
+
+    // 送出訂單（原本可能呼叫 google.script.run）
+    function submitOrder() {
+        if (cart.length === 0) {
+            alert('購物車是空的，無法送出訂單！');
+            return;
+        }
+        
+        // 💡 提示：如果需要傳回 Google 試算表，這裡要改成 fetch('你的GAS部署網址')
+        alert('訂單已模擬送出！(金額: $' + total + ')');
+        clearCart();
+    }
+
+    // 其他按鈕功能預留
+    function switchRole(role) { console.log('切換角色:', role); }
+    function goToBackend() { alert('前往後台登入頁面...'); }
+    function logout() { alert('已登出'); }
+    function toggleOrders() { console.log('收起/展開訂單'); }
+    function viewOrders() { console.log('查看歷史訂單'); }
+</script>
+
+</body>
+</html>
