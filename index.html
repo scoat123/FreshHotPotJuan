@@ -266,12 +266,14 @@ var lastR=-1,guest=false,zi=null,MENU=[],cat=0,mode="內用",table=null,cart={},
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 var API_URL="https://script.google.com/macros/s/AKfycbxVgWd3tKKGkidfE8PuJOMj3fExsQZZZW0iVJspg4KUtgZCglxqrl7Lokxspd095ehgYg/exec";
+var MUT=["submitOrder","setStatus","payOrders","voidOrder","saveItem","setItemOn","deleteItem","setPayMode"],bc=window.BroadcastChannel?new BroadcastChannel("hotpot-web"):null;
+if(bc)bc.onmessage=function(e){var v=document.body.dataset.v;if(v==="kitchen")kLoad(true);else if(v==="front"&&/Item|PayMode/.test(e.data))loadMenu(true)};
 function post(fn,args){return fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:args})}).then(function(r){return r.json()})}
 function call(fn,args,ok,fail,noTok){
  if(API_URL.indexOf("https://script.google.com/")!==0){var m0="尚未設定 API_URL，請編輯 index.html 最上方的網址";if(fail)fail(m0);else alert(m0);return}
  post(fn,noTok?args:[token].concat(args)).then(function(res){
   if(res&&res.err){if(res.err==="expired"){alert("登入已過期，請重新登入");logout();return}if(fail)fail(res.err);else alert(res.err);return}
-  ok(res)},function(e){var m="連線失敗，請檢查網路或 API 網址";if(fail)fail(m);else alert(m)})}
+  if(bc&&MUT.indexOf(fn)>-1)bc.postMessage(fn);ok(res)},function(e){var m="連線失敗，請檢查網路或 API 網址";if(fail)fail(m);else alert(m)})}
 window.addEventListener("unhandledrejection",function(e){alert("發生錯誤："+(e.reason&&e.reason.message||e.reason))});
 function im(id,w){return"https://drive.google.com/thumbnail?id="+id+"&sz=w"+w}
 function imgTag(id,w){return id?'<img src="'+im(id,w)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':""}
@@ -349,7 +351,7 @@ function setV(v){document.body.dataset.v=v;$("toAdmin").style.display=(role==="b
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:0;color:var(--mute)">選擇身分，輸入數字密碼</p><div class="seg"><button data-r="f" class="on">前台</button><button data-r="k">廚房</button><button data-r="b">後台</button></div><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 3.0</p></div>';dots()}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:0;color:var(--mute)">選擇身分，輸入數字密碼</p><div class="seg"><button data-r="f" class="on">前台</button><button data-r="k">廚房</button><button data-r="b">後台</button></div><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 3.1</p></div>';dots()}
 function enter(){if(role==="f"){setV("front");loadMenu()}else if(role==="k"){lastP=-1;setV("kitchen");kLoad()}else{setV("admin");renderAdmin()}}
 function tryLogin(){if(!pin)return;var btn=$("lg");btn.disabled=true;btn.textContent="登入中…";
  call("login",[sel,pin],function(res){token=res.token;role=res.role;pin="";enter()},function(m){btn.disabled=false;btn.textContent="登入";$("err").textContent=m;pin="";dots()},true)}
