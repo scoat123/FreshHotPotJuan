@@ -282,7 +282,7 @@ function total(){var s=0,c=0;for(var k in cart){s+=cart[k].p*cart[k].q;c+=cart[k
 function catCount(i){var s=0;MENU[i].items.forEach(function(it){s+=qtyOf(it.id)});return s}
 function hasSoup(){return MENU.some(function(c,i){return c.t.indexOf("湯底")>-1&&catCount(i)>0})}
 function renderNav(){$("nav").innerHTML=MENU.map(function(c,i){var n=catCount(i);return'<button class="'+(i===cat?"on":"")+'" data-c="'+i+'">'+esc(c.t)+(n?"<b>"+n+"</b>":"")+"</button>"}).join("")}
-var ICONS=[[/龍蝦/,"🦞"],[/透抽/,"🦑"],[/蛤蜊|貝/,"🦪"],[/餃/,"🥟"],[/蝦/,"🦐"],[/蕃茄/,"🍅"],[/起司|乳酪/,"🧀"],[/咖哩/,"🍛"],[/麻辣|酸辣/,"🌶️"],[/雞/,"🐔"],[/薑母|藥膳/,"🌿"],[/泡菜|酸白菜/,"🥬"],[/南瓜/,"🎃"],[/牛奶/,"🥛"],[/牛/,"🐮"],[/豬/,"🐷"],[/羊/,"🐑"],[/雞/,"🐔"],[/魚|鯛/,"🐟"],[/蛋/,"🥚"],[/麵|粉/,"🍜"],[/菇|木耳/,"🍄"],[/玉米/,"🌽"],[/菜|花椰/,"🥬"],[/茶/,"🍵"],[/可樂|沙士|雪碧|舒跑/,"🥤"]],CICONS=[[/湯底/,"🍲"],[/肉/,"🥩"],[/海鮮/,"🦐"],[/鍋料/,"🍢"],[/蔬/,"🥬"],[/飲/,"🥤"]];
+var ICONS=[[/龍蝦/,"🦞"],[/透抽/,"🦑"],[/蛤蜊|貝/,"🦪"],[/餃/,"🥟"],[/蝦/,"🦐"],[/蕃茄/,"🍅"],[/起司|乳酪/,"🧀"],[/咖哩/,"🍛"],[/麻辣|酸辣/,"🌶️"],[/雞蛋/,"🥚"],[/雞/,"🐔"],[/薑母|藥膳/,"🌿"],[/泡菜|酸白菜/,"🥬"],[/南瓜/,"🎃"],[/牛奶/,"🥛"],[/牛/,"🐮"],[/豬/,"🐷"],[/羊/,"🐑"],[/魚|鯛/,"🐟"],[/蛋/,"🥚"],[/麵|粉/,"🍜"],[/菇|木耳/,"🍄"],[/玉米/,"🌽"],[/菜|花椰/,"🥬"],[/茶/,"🍵"],[/可樂|沙士|雪碧|舒跑/,"🥤"]],CICONS=[[/湯底/,"🍲"],[/肉/,"🥩"],[/海鮮/,"🦐"],[/鍋料/,"🍢"],[/蔬/,"🥬"],[/飲/,"🥤"]];
 function ic(it,c){var i,t=it.n;for(i=0;i<ICONS.length;i++)if(ICONS[i][0].test(t))return ICONS[i][1];c=c||it.c||"";for(i=0;i<CICONS.length;i++)if(CICONS[i][0].test(c))return CICONS[i][1];return"🍽️"}
 function vbtn(ii,it){return it.v.map(function(x,vi){return'<button data-a="'+ii+'" data-v="'+vi+'">'+(x.l?esc(x.l):(guest?"加入":""))+"<em>$"+x.p+"</em></button>"}).join("")}
 function renderMain(){if(!MENU.length){$("main").innerHTML='<div class="empty">菜單尚未設定</div>';return}var c=MENU[cat];
