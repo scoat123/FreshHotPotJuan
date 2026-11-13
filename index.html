@@ -13,7 +13,7 @@ html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:18px}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
 button:focus-visible,input:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
-#app{display:grid;grid-template-columns:150px 1fr 360px;grid-template-rows:auto 1fr;height:100%}
+#app{display:grid;grid-template-columns:150px 1fr 360px;grid-template-rows:auto 1fr;height:calc(100% - var(--tb))}
 header{grid-column:1/4;background:var(--red);color:var(--on-red);display:flex;align-items:center;gap:16px;padding:10px 20px}
 header h1{margin:0;font-size:26px;letter-spacing:.08em}
 header .tip{margin-left:auto;font-size:15px;background:rgba(0,0,0,.18);padding:6px 14px;border-radius:20px}
@@ -82,7 +82,7 @@ aside{background:var(--surf);border-left:1px solid var(--line);display:flex;flex
  .cls{display:block!important}
 }
 .cls{display:none;margin:12px 12px 0;padding:10px;border-radius:10px;border:2px solid var(--line)}
-body[data-v="login"] #app,body[data-v="admin"] #app{display:none}
+body[data-v="login"] #app,body[data-v="admin"] #app,body[data-v="map"] #app{display:none}
 #login,#admin{display:none}
 body[data-v="login"] #login{display:flex}
 body[data-v="admin"] #admin{display:block}
@@ -97,7 +97,7 @@ body[data-v="admin"] #admin{display:block}
 .err{color:var(--red);min-height:24px;text-align:center;font-weight:700}
 .hr{margin-left:auto;display:flex;gap:10px;align-items:center}
 .hb{padding:8px 16px;border-radius:20px;background:rgba(0,0,0,.25);color:#fff;font-weight:700}
-#admin{height:100%;overflow:auto;padding:16px 20px}
+#admin{height:calc(100% - var(--tb));overflow:auto;padding:16px 20px}
 .ah{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .ah h1{margin:0;font-size:26px}.sp{flex:1}
 .ah button,.pwf button{padding:12px 18px;border-radius:12px;border:2px solid var(--line);background:var(--surf);font-weight:700}
@@ -121,7 +121,7 @@ body[data-v="admin"] #admin{display:block}
 @media (max-height:640px){.pad button{height:56px;font-size:24px}}
 .card img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px}
 body[data-v="kitchen"] #app{display:none}
-#kitchen{display:none;height:100%;overflow:auto;padding:16px 20px;background:#17100f;color:#f6e9e2}
+#kitchen{display:none;height:calc(100% - var(--tb));overflow:auto;padding:16px 20px;background:#17100f;color:#f6e9e2}
 body[data-v="kitchen"] #kitchen{display:block}
 #kitchen .ah button{background:#2a1d1a;color:#f6e9e2;border-color:#46342f}
 #kitchen .empty{color:#b3a199}
@@ -234,12 +234,55 @@ body[data-v="kitchen"] #kitchen.sv{display:flex;flex-direction:column;overflow:h
 .kall .nt.big{font-size:15px}
 @keyframes fl{0%,100%{box-shadow:inset 0 0 0 0 #ffd52e}50%{box-shadow:inset 0 0 0 14px #ffd52e}}
 #kitchen.flash{animation:fl .8s 4}
+#tmap{display:none;height:calc(100% - var(--tb));padding:12px;gap:12px}
+body[data-v="map"] #tmap{display:flex}
+.tcan{position:relative;flex:1;min-width:0;background:var(--surf);border-radius:16px;border:2px solid var(--line)}
+.tt{position:absolute;border-radius:10px;background:#232020;color:#fff;text-align:left;padding:6px 10px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.25)}
+.tt.tn{flex-direction:column;align-items:flex-start;justify-content:space-between}
+.tl{display:flex;flex-direction:column;min-width:0;white-space:nowrap}
+.tr{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.tt.tn .tr{align-items:flex-start}
+.tt.tn.s-empty{flex-direction:row;align-items:center}
+.tt.tn small{display:none}
+.tt b{font-size:clamp(20px,2.8vw,34px);line-height:1.1}
+.tt i{font-style:normal;font-size:15px;opacity:.8}
+.tt .tp{font-size:38px;opacity:.45;line-height:1}
+.tt .tv{font-size:clamp(18px,2vw,24px);font-weight:800}
+.tt small{font-size:15px;font-weight:700}
+.tt.s-draft{background:#f08a00;color:#2a1a17}.tt.s-dine{background:#12946f}.tt.s-paid{background:#8fd3f4;color:#14303f}
+.tside{flex:0 0 170px;display:flex;flex-direction:column;gap:10px}
+.tbtn{height:72px;border-radius:14px;background:var(--red);color:#fff;font-size:24px;font-weight:800}
+.tleg{margin-top:auto;font-size:16px;line-height:2}
+.tleg i{display:inline-block;width:16px;height:16px;border-radius:4px;margin-right:8px;vertical-align:-2px;background:#232020}
+.tbn{height:52px;padding:0 16px;border-radius:12px;background:var(--bg);border:2px solid var(--line);font-weight:800}
+.tbl2{flex:1;text-align:right;font-size:26px;font-weight:800;color:var(--red);align-self:center}
+.fcan{position:relative;height:min(60vh,540px);background:var(--surf);border:2px solid var(--line);border-radius:16px;touch-action:none;margin-bottom:12px}
+.fd{position:absolute;background:#232020;color:#fff;border-radius:10px;padding:6px 8px;touch-action:none;user-select:none;cursor:grab;overflow:hidden}
+.fd.sel{outline:4px solid var(--yel)}.fd b{font-size:20px}.fd i{display:block;font-style:normal;font-size:14px;opacity:.8}
+html{--tb:56px}
+body.guest{--tb:0px}
+#topbar{display:none;height:var(--tb);background:#2a1a17;gap:8px;align-items:center;padding:0 12px}
+body:not([data-v="login"]) #topbar{display:flex}
+body.guest #topbar{display:none!important}
+#topbar button{height:44px;padding:0 22px;border-radius:12px;font-size:20px;font-weight:800;color:#f6e9e2;background:#46342f}
+#topbar button.on{background:var(--yel);color:#2a1a17}
+#topbar .lo{background:transparent;border:2px solid #7a6a65;font-size:16px;padding:0 16px}
+#chips{flex:1;display:flex;gap:8px;overflow-x:auto;padding:3px}
+body.guest #chips{display:none}
+.ch{flex:none;height:44px;min-width:56px;padding:0 12px;border-radius:10px;font-weight:800;font-size:18px;background:#232020;color:#fff;border:3px solid transparent}
+.ch.s-draft{background:#f08a00;color:#2a1a17}.ch.s-dine{background:#12946f}.ch.s-paid{background:#8fd3f4;color:#14303f}
+.ch.cur{border-color:#fff;box-shadow:0 0 0 3px var(--yel)}
+.nb{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#2a1a17;border-radius:6px;padding:1px 8px;font-size:clamp(18px,2.2vw,26px);font-weight:800}
+.nb em{font-style:normal;background:#1a86c9;color:#fff;border-radius:4px;padding:0 6px;font-size:.8em}
+.pk{background:var(--yel);color:#2a1a17;border-radius:12px;padding:10px;font-weight:800;font-size:18px;text-align:center}
+.tg2{background:var(--bg);color:var(--ink);border:2px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body data-v="login">
+<div id="topbar"></div>
 <div id="app">
- <header><h1>鮮味愛喝湯 <small id="gt"></small></h1><span class="hr"><span class="tip">點選品項加入 · 右側確認後送出</span><button class="hb" id="toPay">結帳</button><button class="hb" id="toGuest">客人點餐</button><button class="hb" id="toAdmin">回後台</button><button class="hb" id="exitGuest">🔒 店員</button><button class="hb" id="out">登出</button></span></header>
+ <header><h1>鮮味愛喝湯 <small id="gt"></small></h1><div id="chips"></div><span class="hr"><button class="hb" id="toPay">結帳</button><button class="hb" id="toGuest">客人點餐</button><button class="hb" id="exitGuest">🔒 店員</button></span></header>
  <nav id="nav" aria-label="菜單分類"></nav>
  <main id="main"></main>
  <aside id="cart">
@@ -258,16 +301,17 @@ body[data-v="kitchen"] #kitchen.sv{display:flex;flex-direction:column;overflow:h
 <div id="login"></div>
 <div id="admin"></div>
 <div id="kitchen"></div>
+<div id="tmap"></div>
 <div class="ov" id="zoom"></div>
 <div class="ov" id="pay"></div>
 <script>
 window.addEventListener("error",function(e){alert("發生錯誤："+e.message)});
-var lastR=-1,guest=false,zi=null,MENU=[],cat=0,mode="內用",table=null,cart={},token=null,role=null,sel="f",pin="",tab="orders",lastP=-1,dE=null,MA=null;
+var drafts={},ordering=false,tabSel="map",lastR=-1,guest=false,zi=null,MENU=[],cat=0,mode="內用",table=null,cart={},token=null,role=null,sel="f",pin="",tab="orders",lastP=-1,dE=null,MA=null;
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 var API_URL="https://script.google.com/macros/s/AKfycbxVgWd3tKKGkidfE8PuJOMj3fExsQZZZW0iVJspg4KUtgZCglxqrl7Lokxspd095ehgYg/exec";
-var MUT=["submitOrder","setStatus","payOrders","voidOrder","saveItem","setItemOn","deleteItem","setPayMode"],bc=window.BroadcastChannel?new BroadcastChannel("hotpot-web"):null;
-if(bc)bc.onmessage=function(e){var v=document.body.dataset.v;if(v==="kitchen")kLoad(true);else if(v==="front"&&/Item|PayMode/.test(e.data))loadMenu(true)};
+var MUT=["submitOrder","setStatus","payOrders","voidOrder","saveItem","setItemOn","deleteItem","setPayMode","setGuests"],bc=window.BroadcastChannel?new BroadcastChannel("hotpot-web"):null;
+if(bc)bc.onmessage=function(e){var v=document.body.dataset.v;if(v==="kitchen")kLoad(true);else if(v==="front"||v==="map"){if(/Item|PayMode/.test(e.data))loadMenu(true);loadMap(true)}};
 function post(fn,args){return fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:args})}).then(function(r){return r.json()})}
 function call(fn,args,ok,fail,noTok){
  if(API_URL.indexOf("https://script.google.com/")!==0){var m0="尚未設定 API_URL，請編輯 index.html 最上方的網址";if(fail)fail(m0);else alert(m0);return}
@@ -296,39 +340,43 @@ function renderMain(){if(!MENU.length){$("main").innerHTML='<div class="empty">�
  return'<div class="card'+(q?" has":"")+'">'+b+pic+nm+'<div class="vs">'+vbtn(ii,it)+"</div></div>"}).join("")+"</div>"}
 function openZoom(ii){var it=MENU[cat].items[ii];zi=it;$("zoom").innerHTML='<div class="dlg zm"><button class="xz" id="zx" aria-label="關閉">✕</button>'+(it.img?'<img src="'+im(it.img,1000)+'" alt="" referrerpolicy="no-referrer">':'<div class="bigic">'+ic(it,MENU[cat].t)+"</div>")+"<h3>"+esc(it.n)+'</h3><div class="vs">'+it.v.map(function(x,vi){return'<button data-v="'+vi+'">'+(x.l?esc(x.l):"加入")+"<em>$"+x.p+"</em></button>"}).join("")+"</div></div>";$("zoom").classList.add("show")}
 function renderCart(){var keys=Object.keys(cart),t=total();
- $("mode").innerHTML=["內用","外帶"].map(function(m){return'<button class="'+(m===mode?"on":"")+'" data-m="'+m+'">'+m+"</button>"}).join("");
+ $("mode").innerHTML='<button class="tbn" data-m="back">← 桌位圖</button><span class="tbl2">'+(mode==="內用"?"桌 "+esc(table):"外帶")+"</span>"+(mode==="內用"?'<button class="tbn" data-m="g">👥 '+(TG[table]||"—")+" 人</button>":"");
  $("list").innerHTML=keys.length?keys.map(function(k){var r=cart[k];return'<div class="row"><div class="n">'+esc(r.n)+(r.l?" <span>"+esc(r.l)+"</span>":"")+'</div><div class="t">$'+r.p*r.q+'</div><div class="step"><button data-k="'+esc(k)+'" data-d="-1" aria-label="減少">−</button><i>'+r.q+'</i><button data-k="'+esc(k)+'" data-d="1" aria-label="增加">+</button></div><div></div></div>'}).join(""):'<div class="empty">尚未點餐<br>從左側分類選擇品項</div>';
  $("tot").textContent="$"+t.s;$("go").disabled=!t.c;
  $("warn").innerHTML=t.c&&!hasSoup()?'<div class="warn">還沒有選湯底，每鍋需點一種湯底</div>':"";
  $("barTxt").textContent=t.c?t.c+" 項 · $"+t.s:"尚未點餐"}
-function render(){renderNav();renderMain();renderCart()}
+function render(){syncDraft();renderNav();renderMain();renderCart();drawChips()}
 function loadMenu(quiet){call("getMenu",[],function(m){var st=$("main").scrollTop;MENU=m;if(cat>=MENU.length)cat=0;render();$("main").scrollTop=st},quiet?function(){}:null)}
 $("nav").onclick=function(e){var b=e.target.closest("button");if(b){cat=+b.dataset.c;render();$("main").scrollTop=0}};
 $("main").onclick=function(e){var z=e.target.closest("button[data-z]");if(z){openZoom(+z.dataset.z);return}var b=e.target.closest("button[data-a]");if(!b)return;var it=MENU[cat].items[+b.dataset.a],v=it.v[+(b.dataset.v||0)];add(it.id,it.n,v.l,v.p,1)};
-$("mode").onclick=function(e){var b=e.target.closest("button");if(b){mode=b.dataset.m;renderCart()}};
+$("mode").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.dataset.m==="g")askGuests(table,false);else showMap()};
 $("list").onclick=function(e){var b=e.target.closest("button[data-k]");if(b){var r=cart[b.dataset.k];add(r.id,r.n,r.l,r.p,+b.dataset.d)}};
 $("clr").onclick=function(){if(Object.keys(cart).length&&confirm("確定清空目前訂單？")){cart={};render()}};
 $("barBtn").onclick=function(){$("cart").classList.add("open")};
 $("cls").onclick=function(){$("cart").classList.remove("open")};
 function closeOv(){$("ov").classList.remove("show")}
 $("go").onclick=function(){var h='<h3>確認送出</h3>';
- if(guest)h+='<p>桌號 '+table+'</p>';else if(mode==="內用"){h+='<div>桌號</div><div class="tbl" id="tbl">';for(var i=1;i<=24;i++)h+='<button data-t="'+i+'" class="'+(table===i?"on":"")+'">'+i+"</button>";h+="</div>"}else h+="<p>外帶訂單，備餐完成後會叫號。</p>";
+ if(guest)h+='<p style="font-size:24px">桌號 <b>'+esc(table)+'</b></p>';else if(mode==="內用")h+='<p style="font-size:24px">桌號 <b>'+esc(table)+'</b></p>';else h+="<p>外帶訂單，備餐完成後會叫號。</p>";
  h+='<input id="note" placeholder="備註（例如：不要香菜、湯底先上）" aria-label="備註"><div class="acts"><button class="ghost" id="back">返回修改</button><button class="go" id="send">確認送出 · $'+total().s+"</button></div>";
  $("dlg").innerHTML=h;$("ov").classList.add("show")};
 /* ---------- 對話框（送單／菜單編輯） ---------- */
 $("dlg").onclick=function(e){var b=e.target.closest("button");if(!b)return;var i=b.id;
  if(b.dataset.t){table=+b.dataset.t;[].forEach.call($("tbl").children,function(x){x.classList.toggle("on",x===b)})}
- else if(b.dataset.g)startGuest(+b.dataset.g);
+ else if(b.dataset.g)startGuest(b.dataset.g);
  else if(i==="xok"){b.disabled=true;call("login",[role==="b"?"b":"f",$("xp").value],function(){endGuest();closeOv()},function(m){b.disabled=false;$("xe").textContent=m},true)}
  else if(i==="gopay"){closeOv();openPay()}
- else if(i==="back"||i==="done"||i==="mCancel")closeOv();
+ else if(b.dataset.gn)setGuests2(+b.dataset.gn)
+ else if(i==="gok"){var gv=parseInt($("gx").value,10);if(!(gv>=1&&gv<=99)){alert("請輸入 1 到 99 的人數");return}setGuests2(gv)}
+ else if(i==="gskip"){closeOv();startOrder(gAsk.label)}
+ else if(b.dataset.tp){closeOv();var tp=b.dataset.tp,tn=b.dataset.tn;if(tp==="add")startOrder(tn);else if(tp==="new")askGuests(tn,true);else if(tp==="guests")askGuests(tn,false);else openPay(tn)}
+ else if(i==="back"||i==="done"||i==="mCancel"){closeOv();if(i==="done"&&!guest&&document.body.dataset.v==="front")showMap()}
  else if(i==="send"){
   if(mode==="內用"&&!table){alert("請先選擇桌號");return}
   var note=$("note").value,lines=Object.keys(cart).map(function(k){return cart[k]});
   b.disabled=true;b.textContent="送出中…";
   call("submitOrder",[{mode:mode,table:table,note:note,lines:lines.map(function(r){return{id:r.id,l:r.l,q:r.q}})}],function(res){
    $("dlg").innerHTML='<div class="ok"><h3>訂單已送出</h3><div>'+(mode==="內用"?"桌號 "+table:"外帶")+'</div><div class="no">#'+esc(res.no)+'</div>'+(res.addon?'<div class="tag">追加單：此桌尚有未結帳訂單，結帳時一併計算</div>':"")+(res.pre?'<div class="warn">'+(guest?"請到櫃台結帳，付款後才會開始製作":"餐前結帳：請先收款，收款後才會送到廚房")+'</div>':"")+'<ul>'+lines.map(function(r){return"<li><span>"+esc(r.n)+(r.l?"（"+esc(r.l)+"）":"")+" × "+r.q+"</span><span>$"+r.p*r.q+"</span></li>"}).join("")+"</ul>"+(note?"<div>備註："+esc(note)+"</div>":"")+'<div class="tot" style="margin-top:12px"><span>合計</span><b>$'+res.total+'</b></div><div class="acts">'+(res.pre&&!guest?'<button class="ghost" id="gopay">前往結帳</button>':"")+'<button class="go" id="done">完成，開始下一單</button></div></div>';
-   cart={};if(!guest)table=null;$("cart").classList.remove("open");render()
+   delete drafts[curKey()];cart={};if(!guest){ordering=false;table=null}$("cart").classList.remove("open");render()
   },function(m){b.disabled=false;b.textContent="重新送出";alert(m);loadMenu(true)})}
  else if(i==="mAddV"){syncE();dE.v.push({l:"",p:""});eDraw()}
  else if(b.dataset.rm!=null){syncE();dE.v.splice(+b.dataset.rm,1);if(!dE.v.length)dE.v.push({l:"",p:""});eDraw()}
@@ -347,19 +395,21 @@ function eDraw(){var cs=MA.cats.map(function(c){return c.t}),h='<h3>'+(dE.id?"�
 function openEdit(id){var it=id?MA.items.filter(function(x){return x.id===id})[0]:null;
  dE=it?{id:it.id,c:it.c,n:it.n,cn:"",cs:"",img:it.img,data:null,rm:false,v:it.v.map(function(x){return{l:x.l,p:x.p}})}:{id:"",c:MA.cats[0]?MA.cats[0].t:"__new",n:"",cn:"",cs:"",img:"",data:null,rm:false,v:[{l:"",p:""}]};eDraw()}
 /* ---------- 登入 ---------- */
-function setV(v){document.body.dataset.v=v;$("toAdmin").style.display=(role==="b"&&(v==="front"||v==="kitchen"))?"":"none"}
+function setV(v){document.body.dataset.v=v;drawTabs()}
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:0;color:var(--mute)">選擇身分，輸入數字密碼</p><div class="seg"><button data-r="f" class="on">前台</button><button data-r="k">廚房</button><button data-r="b">後台</button></div><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 3.1</p></div>';dots()}
-function enter(){if(role==="f"){setV("front");loadMenu()}else if(role==="k"){lastP=-1;setV("kitchen");kLoad()}else{setV("admin");renderAdmin()}}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 3.4</p></div>';dots()}
+function enter(){role="b";lastP=-1;tabSel="map";ordering=false;setV("map");loadMenu(true);loadMap()}
+var TABN=[["map","桌號狀態"],["order","點餐畫面"],["kitchen","廚房畫面"],["admin","後台"]];
+function drawTabs(){$("topbar").innerHTML=TABN.map(function(t){return'<button data-tab="'+t[0]+'" class="'+(t[0]===tabSel?"on":"")+'">'+t[1]+"</button>"}).join("")+'<span class="sp"></span><button data-tab="out" class="lo">登出</button>'}
+function goTab(t){tabSel=t;if(t==="map"){setV("map");loadMap()}else if(t==="order"){if(ordering){setV("front");render()}else{setV("map");loadMap()}}else if(t==="kitchen"){lastP=-1;setV("kitchen");kLoad()}else{setV("admin");renderAdmin()}}
+$("topbar").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.dataset.tab==="out")logout();else goTab(b.dataset.tab)};
 function tryLogin(){if(!pin)return;var btn=$("lg");btn.disabled=true;btn.textContent="登入中…";
  call("login",[sel,pin],function(res){token=res.token;role=res.role;pin="";enter()},function(m){btn.disabled=false;btn.textContent="登入";$("err").textContent=m;pin="";dots()},true)}
-function logout(){guest=false;document.body.classList.remove("guest");$("gt").textContent="";if(token&&API_URL.indexOf("https://script.google.com/")===0)post("logout",[token]).catch(function(){});token=null;role=null;cart={};table=null;MENU=[];KMENU=[];closeOv();$("cart").classList.remove("open");loginUI();setV("login");render()}
+function logout(){drafts={};ordering=false;guest=false;document.body.classList.remove("guest");$("gt").textContent="";if(token&&API_URL.indexOf("https://script.google.com/")===0)post("logout",[token]).catch(function(){});token=null;role=null;cart={};table=null;MENU=[];KMENU=[];closeOv();$("cart").classList.remove("open");loginUI();setV("login");render()}
 $("login").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.dataset.r){sel=b.dataset.r;[].forEach.call(b.parentNode.children,function(x){x.classList.toggle("on",x===b)});$("err").textContent=""}else if(b.dataset.k)press(b.dataset.k);else if(b.id==="lg")tryLogin()};
 document.addEventListener("keydown",function(e){if(document.body.dataset.v!=="login")return;if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==="Backspace")press("x");else if(e.key==="Enter")tryLogin()});
-$("out").onclick=logout;
-$("toAdmin").onclick=function(){setV("admin");renderAdmin()};
 /* ---------- 廚房 ---------- */
 function beep(){try{var a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator();o.frequency.value=880;o.connect(a.destination);o.start();setTimeout(function(){o.stop();a.close()},350)}catch(x){}}
 var KMENU=[],KO=[],kSel=0,KT=0,kAll=false,WL=null,KPR={"待處理":0,"製作中":1,"待送餐":2};
@@ -396,28 +446,28 @@ function kDraw(d){var pr={"待處理":0,"製作中":1,"待送餐":2},cnt=functio
  keepAwake();if(lastP>=0&&p>lastP){beep();flash()}lastP=p;if(lastR>=0&&r>lastR)beep();lastR=r;
  if(!KO.some(function(o){return o.row===kSel}))kSel=KO.length?KO[0].row:0;
  var sel=KO.filter(function(o){return o.row===kSel})[0],st=$("kitchen").scrollTop,qs=$("kitchen").querySelector(".kq"),qt=qs?qs.scrollTop:0;
- $("kitchen").innerHTML='<div class="ah"><h1>廚房／送餐</h1><span class="tag">待處理 '+p+'</span><span class="tag">製作中 '+m+'</span><span class="tag">待送餐 '+r+'</span><span class="sp"></span>'+(role==="b"?'<button id="kBack">回後台</button>':"")+'<button id="kAllBtn">'+(kAll?"單張檢視":"全部展開")+'</button><button id="kOut">登出</button></div>'+(kAll?'<div class="kgrid kall">'+(KO.map(kcard).join("")||'<div class="empty">目前沒有需要處理的訂單</div>')+"</div>":'<div class="kw"><div class="kq">'+(KO.map(function(o){return'<button class="qi st'+pr[o.status]+(o.row===kSel?" sel":"")+'" data-q="'+o.row+'"><b>#'+esc(o.no)+"</b> "+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+(o.addon?" ・追加":"")+"<small>"+o.status+" · "+o.mins+" 分 · "+o.lines.reduce(function(s,l){return s+l.q},0)+" 項</small></button>"}).join("")||'<div class="empty">沒有訂單</div>')+'</div><div class="kf">'+(sel?kfocus(sel):'<div class="empty">目前沒有需要處理的訂單</div>')+"</div></div>");
+ $("kitchen").innerHTML='<div class="ah"><h1>廚房／送餐</h1><span class="tag">待處理 '+p+'</span><span class="tag">製作中 '+m+'</span><span class="tag">待送餐 '+r+'</span><span class="sp"></span><button id="kAllBtn">'+(kAll?"單張檢視":"全部展開")+'</button></div>'+(kAll?'<div class="kgrid kall">'+(KO.map(kcard).join("")||'<div class="empty">目前沒有需要處理的訂單</div>')+"</div>":'<div class="kw"><div class="kq">'+(KO.map(function(o){return'<button class="qi st'+pr[o.status]+(o.row===kSel?" sel":"")+'" data-q="'+o.row+'"><b>#'+esc(o.no)+"</b> "+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+(o.addon?" ・追加":"")+"<small>"+o.status+" · "+o.mins+" 分 · "+o.lines.reduce(function(s,l){return s+l.q},0)+" 項</small></button>"}).join("")||'<div class="empty">沒有訂單</div>')+'</div><div class="kf">'+(sel?kfocus(sel):'<div class="empty">目前沒有需要處理的訂單</div>')+"</div></div>");
  $("kitchen").classList.toggle("sv",!kAll);if(!kAll)kfit();
  $("kitchen").scrollTop=st;var q2=$("kitchen").querySelector(".kq");if(q2)q2.scrollTop=qt}
 $("kitchen").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.id==="kOut")logout();else if(b.id==="kBack"){setV("admin");renderAdmin()}else if(b.id==="kAllBtn"){kAll=!kAll;kDraw({orders:KO})}else if(b.dataset.q){kSel=+b.dataset.q;kDraw({orders:KO})}else if(b.dataset.row){b.disabled=true;call("setStatus",[+b.dataset.row,b.dataset.no,b.dataset.s],function(){kLoad()},function(m){alert(m);kLoad()})}};
 setInterval(function(){if(document.body.dataset.v==="kitchen")kLoad(true)},10000);
 setInterval(function(){if(document.body.dataset.v==="front"&&!$("ov").classList.contains("show"))loadMenu(true)},90000);
 /* ---------- 後台 ---------- */
-var TABS=[["orders","訂單紀錄"],["report","日報表"],["menu","菜單管理"],["set","設定"]];
-function renderAdmin(){$("admin").innerHTML='<div class="ah"><h1>後台管理</h1><span class="sp"></span><button class="pri" id="aFront">點餐畫面</button><button id="aKit">廚房畫面</button><button id="aOut">登出</button></div><div class="tabs">'+TABS.map(function(t){return'<button data-tab="'+t[0]+'" class="'+(t[0]===tab?"on":"")+'">'+t[1]+"</button>"}).join("")+'</div><div id="tb"><div class="empty">載入中…</div></div>';
- ({orders:tOrders,report:function(){tReport("")},menu:tMenu,set:tSet})[tab]()}
+var TABS=[["orders","訂單紀錄"],["report","日報表"],["menu","菜單管理"],["floor","桌位"],["set","設定"]];
+function renderAdmin(){$("admin").innerHTML='<div class="ah"><h1>後台管理</h1></div><div class="tabs">'+TABS.map(function(t){return'<button data-tab="'+t[0]+'" class="'+(t[0]===tab?"on":"")+'">'+t[1]+"</button>"}).join("")+'</div><div id="tb"><div class="empty">載入中…</div></div>';
+ ({floor:tFloor,orders:tOrders,report:function(){tReport("")},menu:tMenu,set:tSet})[tab]()}
 function bad(m){$("tb").innerHTML='<div class="empty">'+esc(m)+"</div>"}
 function tOrders(){call("getAdmin",[],function(d){$("tb").innerHTML='<div class="stats"><div>今日訂單<b>'+d.todayCount+'</b></div><div>今日營業額<b>$'+d.todaySum+'</b></div><div>累計營業額<b>$'+d.sum+'</b></div><div>未收款<b>$'+d.unpaid+'</b></div></div><div class="ah"><h2 style="margin:0">訂單紀錄（最近 200 筆）</h2><span class="sp"></span><button id="aRef">重新整理</button><button id="aClr">清除全部訂單</button></div>'+(d.orders.length?d.orders.map(function(o){return'<div class="ord"><div class="oh"><span>#'+esc(o.no)+' · '+(o.mode==="內用"?"桌號 "+esc(o.table):"外帶")+' <span class="tag">'+esc(o.status)+'</span> <span class="tag">'+(o.paid?"已收款（"+esc(o.method)+"）":"未收款")+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'</span><span>$'+o.total+'</span></div><p>'+esc(o.time)+'</p><p>'+esc(o.items)+'</p>'+(o.note?'<p>備註：'+esc(o.note)+'</p>':'')+(o.status!=="取消"?'<button class="tg" data-vd="'+o.row+'" data-no="'+esc(o.no)+'">作廢</button>':"")+'</div>'}).join(""):'<div class="empty">尚無訂單</div>')},bad)}
 function tReport(dt){call("getReport",[dt],function(d){var mx=Math.max.apply(null,d.week.map(function(x){return x.s}).concat([1])),mq=d.top.length?d.top[0].q:1;
  $("tb").innerHTML='<div class="ah"><input type="date" id="rd" value="'+d.date+'" class="dt"><h2 style="margin:0">'+d.date+' 日報表</h2></div><div class="stats"><div>訂單數<b>'+d.count+'</b></div><div>營業額<b>$'+d.sum+'</b></div><div>平均客單<b>$'+d.avg+'</b></div></div><div class="stats"><div>內用<b>'+d.dine.c+' 筆</b>$'+d.dine.s+'</div><div>外帶<b>'+d.take.c+' 筆</b>$'+d.take.s+'</div></div><h3>熱銷品項</h3>'+(d.top.length?'<table class="tb"><tr><th>品項</th><th></th><th>數量</th><th>金額</th></tr>'+d.top.map(function(x){return"<tr><td>"+esc(x.n)+'</td><td style="width:30%"><div class="bar" style="width:'+Math.round(x.q/mq*100)+'%"></div></td><td>'+x.q+"</td><td>$"+x.s+"</td></tr>"}).join("")+"</table>":'<div class="empty">這天沒有品項明細</div>')+'<h3>近 7 日營業額</h3><table class="tb">'+d.week.map(function(x){return"<tr><td>"+x.d.slice(5)+'</td><td style="width:55%"><div class="bar" style="width:'+Math.round(x.s/mx*100)+'%"></div></td><td>'+x.c+" 筆</td><td>$"+x.s+"</td></tr>"}).join("")+"</table>"},bad)}
 function tMenu(){call("getMenuAdmin",[],function(d){MA=d;var names=d.cats.map(function(c){return c.t});d.items.forEach(function(i){if(names.indexOf(i.c)<0)names.push(i.c)});
  $("tb").innerHTML='<div class="ah"><h2 style="margin:0">菜單管理</h2><span class="sp"></span><button class="pri" id="mNew">＋新增品項</button></div>'+names.map(function(n){var its=d.items.filter(function(i){return i.c===n});return its.length?"<h3>"+esc(n)+"</h3>"+its.map(function(i){return'<div class="mi'+(i.on?"":" off")+'">'+(i.img?imgTag(i.img,120):'<div class="ph">'+ic(i,i.c)+'</div>')+'<div class="nm">'+esc(i.n)+"<small>"+i.v.map(function(v){return(v.l?esc(v.l)+" ":"")+"$"+v.p}).join(" / ")+'</small></div><button class="tg'+(i.on?" on":"")+'" data-tg="'+i.id+'" data-on="'+(i.on?1:0)+'">'+(i.on?"供應中":"已下架")+'</button><button class="tg" data-ed="'+i.id+'">編輯</button></div>'}).join(""):""}).join("")},bad)}
-function tSet(){call("getSettings",[],function(d){var pm=function(k,t,x){return'<button data-pm="'+k+'" class="'+(d.payMode===k?"on":"")+'">'+t+"<small>"+x+"</small></button>"};$("tb").innerHTML='<h3>結帳方式</h3><div class="seg">'+pm("after","餐後結帳","先出餐，客人吃完再到櫃台結帳")+pm("before","餐前結帳","先收款，收款後訂單才送到廚房")+'</div><p style="color:var(--mute);font-size:15px">切換後只影響新訂單；已送出但尚未付款的訂單，仍需先收款。</p><h3>密碼</h3>'+'<div class="pwf"><label>前台密碼<input id="pf" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><label>廚房密碼<input id="pk" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><label>後台密碼<input id="pb" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 位數字，留空不變" autocomplete="new-password"></label><button id="aSave">更改密碼</button></div>'},bad)}
-$("admin").oninput=function(e){if(/^p[fkb]$/.test(e.target.id))e.target.value=e.target.value.replace(/\D/g,"")};
+function tSet(){call("getSettings",[],function(d){var pm=function(k,t,x){return'<button data-pm="'+k+'" class="'+(d.payMode===k?"on":"")+'">'+t+"<small>"+x+"</small></button>"};$("tb").innerHTML='<h3>結帳方式</h3><div class="seg">'+pm("after","餐後結帳","先出餐，客人吃完再到櫃台結帳")+pm("before","餐前結帳","先收款，收款後訂單才送到廚房")+'</div><p style="color:var(--mute);font-size:15px">切換後只影響新訂單；已送出但尚未付款的訂單，仍需先收款。</p><h3>登入密碼</h3><div class="pwf"><label>新密碼（4–8 位數字）<input id="pb" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="輸入新密碼" autocomplete="new-password"></label><button id="aSave">更改密碼</button></div>'},bad)}
+$("admin").oninput=function(e){var t=ET[es];if(t&&/^f[nswh]$/.test(e.target.id)){var v=e.target.value;if(e.target.id==="fn")t.n=v;else{v=v.replace(/\D/g,"");e.target.value=v;t[{fs:"s",fw:"w",fh:"h"}[e.target.id]]=+v}}if(/^p[fkb]$/.test(e.target.id))e.target.value=e.target.value.replace(/\D/g,"")};
 $("admin").onchange=function(e){if(e.target.id==="rd"&&e.target.value)tReport(e.target.value)};
 $("admin").onclick=function(e){var b=e.target.closest("button");if(!b)return;var i=b.id;
  if(b.dataset.tab){tab=b.dataset.tab;renderAdmin()}
- else if(i==="aFront"){setV("front");loadMenu()}
+ else if(i==="aFront"){setV("front");loadMenu();showMap()}
  else if(i==="aKit"){lastP=-1;setV("kitchen");kLoad()}
  else if(i==="aOut")logout();
  else if(i==="aRef")tOrders();
@@ -425,22 +475,57 @@ $("admin").onclick=function(e){var b=e.target.closest("button");if(!b)return;var
  else if(b.dataset.ed)openEdit(b.dataset.ed);
  else if(b.dataset.tg){b.disabled=true;call("setItemOn",[b.dataset.tg,b.dataset.on!=="1"],tMenu,function(m){alert(m);tMenu()})}
  else if(b.dataset.pm){call("setPayMode",[b.dataset.pm],function(){alert("已切換為"+(b.dataset.pm==="before"?"餐前結帳":"餐後結帳"));tSet()})}
- else if(i==="aSave"){var v=["pf","pk","pb"].map(function(x){return $(x).value});if(v.some(function(x){return x&&!/^\d{4,8}$/.test(x)})){alert("密碼需為 4–8 位數字");return}call("setPasswords",v,function(){alert("密碼已更新");tSet()})}
+ else if(i==="fadd"){ET.push({n:"T"+(ET.length+1),s:4,x:40,y:40,w:14,h:10});es=ET.length-1;drawFloor()}
+ else if(i==="fdel"){ET.splice(es,1);es=-1;drawFloor()}
+ else if(i==="fsave"){call("saveTables",[ET],function(){alert("桌位已儲存")})}
+ else if(i==="aSave"){var v=$("pb").value;if(!/^\d{4,8}$/.test(v)){alert("密碼需為 4–8 位數字");return}call("setPassword",[v],function(){alert("密碼已更新");tSet()})}
  else if(b.dataset.vd){if(confirm("確定作廢 #"+b.dataset.no+"？作廢後不計入營業額。"))call("voidOrder",[+b.dataset.vd,b.dataset.no],tOrders)}
  else if(i==="aClr"){if(confirm("確定清除全部訂單紀錄？此動作無法復原。"))call("clearOrders",[],tOrders)}};
-function startGuest(n){guest=true;table=n;mode="內用";cart={};document.body.classList.add("guest");$("gt").textContent="· 桌號 "+n;closeOv();render()}
-function endGuest(){guest=false;table=null;cart={};document.body.classList.remove("guest");$("gt").textContent="";render()}
-$("toGuest").onclick=function(){var h='<h3>客人點餐：選擇桌號</h3><div class="tbl">';for(var i=1;i<=24;i++)h+='<button data-g="'+i+'">'+i+"</button>";$("dlg").innerHTML=h+'</div><div class="acts"><button class="ghost" id="back">取消</button></div>';$("ov").classList.add("show")};
+function startGuest(n){ordering=true;guest=true;table=n;mode="內用";cart={};document.body.classList.add("guest");document.body.classList.remove("fmap");$("gt").textContent="· 桌號 "+n;closeOv();render()}
+function endGuest(){guest=false;table=null;cart={};document.body.classList.remove("guest");$("gt").textContent="";render();showMap()}
+$("toGuest").onclick=function(){var h='<h3>客人點餐：選擇桌號</h3><div class="tbl">';TB.forEach(function(t){h+='<button data-g="'+esc(t.n)+'">'+esc(t.n)+"</button>"});$("dlg").innerHTML=h+'</div><div class="acts"><button class="ghost" id="back">取消</button></div>';$("ov").classList.add("show")};
 $("exitGuest").onclick=function(){$("dlg").innerHTML='<h3>店員驗證</h3><input id="xp" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="輸入前台密碼" autocomplete="off"><div class="err" id="xe"></div><div class="acts"><button class="ghost" id="back">取消</button><button class="go" id="xok">確認</button></div>';$("ov").classList.add("show");setTimeout(function(){$("xp").focus()},50)};
 $("dlg").oninput=function(e){if(e.target.id==="xp")e.target.value=e.target.value.replace(/\D/g,"")};
 $("zoom").onclick=function(e){var b=e.target.closest("button[data-v]");if(b){var v=zi.v[+b.dataset.v];add(zi.id,zi.n,v.l,v.p,1);$("zoom").classList.remove("show");return}if(e.target===$("zoom")||e.target.closest("#zx"))$("zoom").classList.remove("show")};
-var PG=[],PM="after";
-function openPay(){$("pay").innerHTML='<div class="dlg pdlg"><div class="ah"><h3 style="margin:0">結帳</h3><span class="tag" id="pmt"></span><span class="sp"></span><button class="ghost" id="pr">重新整理</button><button class="ghost" id="px">關閉</button></div><div id="pb2"><div class="empty">載入中…</div></div></div>';$("pay").classList.add("show");loadPay()}
-function loadPay(){call("getTabs",[],function(d){PG=d.groups;PM=d.payMode;$("pmt").textContent=PM==="before"?"餐前結帳":"餐後結帳";$("pb2").innerHTML=PG.length?PG.map(function(g,gi){return'<div class="pg"><h4>'+esc(g.label)+(PM==="after"&&g.orders.some(function(o){return o.status!=="已送達"})?' <span class="tag">尚有餐點未送達</span>':"")+'</h4>'+g.orders.map(function(o){return'<div class="oh" style="font-weight:500"><span>#'+esc(o.no)+" "+esc(o.time)+' <span class="tag">'+esc(o.status)+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'</span><span>$'+o.total+'</span></div><p style="margin:2px 0 8px;color:var(--mute);font-size:15px">'+esc(o.items)+"</p>"}).join("")+'<div class="tot"><span>合計</span><b>$'+g.sum+'</b></div><div class="pm">'+["現金","行動支付","信用卡"].map(function(m){return'<button data-pg="'+gi+'" data-m="'+m+'">'+m+" 收款</button>"}).join("")+"</div></div>"}).join(""):'<div class="empty">沒有未結帳的訂單</div>'},function(m){$("pb2").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
-$("toPay").onclick=openPay;
+var PG=[],PM="after",PF="",TB=[],TS={},TG={},gAsk=null;
+function openPay(f){PF=f||"";$("pay").innerHTML='<div class="dlg pdlg"><div class="ah"><h3 style="margin:0">結帳</h3><span class="tag" id="pmt"></span><span class="sp"></span><button class="ghost" id="pr">重新整理</button><button class="ghost" id="px">關閉</button></div><div id="pb2"><div class="empty">載入中…</div></div></div>';$("pay").classList.add("show");loadPay()}
+function loadPay(){call("getTabs",[],function(d){PG=d.groups.filter(function(g){return!PF||g.label==="桌 "+PF});PM=d.payMode;$("pmt").textContent=PM==="before"?"餐前結帳":"餐後結帳";$("pb2").innerHTML=PG.length?PG.map(function(g,gi){return'<div class="pg"><h4>'+esc(g.label)+(PM==="after"&&g.orders.some(function(o){return o.status!=="已送達"})?' <span class="tag">尚有餐點未送達</span>':"")+'</h4>'+g.orders.map(function(o){return'<div class="oh" style="font-weight:500"><span>#'+esc(o.no)+" "+esc(o.time)+' <span class="tag">'+esc(o.status)+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'</span><span>$'+o.total+'</span></div><p style="margin:2px 0 8px;color:var(--mute);font-size:15px">'+esc(o.items)+"</p>"}).join("")+'<div class="tot"><span>合計</span><b>$'+g.sum+'</b></div><div class="pm">'+["現金","行動支付","信用卡"].map(function(m){return'<button data-pg="'+gi+'" data-m="'+m+'">'+m+" 收款</button>"}).join("")+"</div></div>"}).join(""):'<div class="empty">沒有未結帳的訂單</div>'},function(m){$("pb2").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
+$("toPay").onclick=function(){openPay("")};
 $("pay").onclick=function(e){var b=e.target.closest("button");if(!b){if(e.target===$("pay"))$("pay").classList.remove("show");return}
- if(b.id==="px")$("pay").classList.remove("show");else if(b.id==="pr")loadPay();
+ if(b.id==="px"){$("pay").classList.remove("show");loadMap(true)}else if(b.id==="pr")loadPay();
  else if(b.dataset.pg){var g=PG[+b.dataset.pg];if(!confirm(g.label+" 合計 $"+g.sum+"，以「"+b.dataset.m+"」收款？"))return;b.disabled=true;call("payOrders",[g.orders.map(function(o){return{row:o.row,no:o.no}}),b.dataset.m],loadPay,function(m){alert(m);loadPay()})}};
+/* ---------- 桌號狀態 ---------- */
+var TLAB={dine:"已送出・未結帳",paid:"已結帳"};
+function curKey(){return mode==="外帶"?"外帶":table}
+function syncDraft(){if(!ordering)return;var k=curKey();if(Object.keys(cart).length)drafts[k]=cart;else delete drafts[k]}
+function dcount(k){var d=drafts[k],n=0;if(d)for(var x in d)n+=d[x].q;return n}
+function tstate(k){return drafts[k]?"draft":(TS[k]?TS[k].st:"empty")}
+function showMap(){tabSel="order";ordering=false;cart={};table=null;setV("map");loadMap()}
+function startOrder(n){syncDraft();if(n===null){mode="外帶";table=null}else{mode="內用";table=n}ordering=true;cart=drafts[curKey()]||{};cat=0;tabSel="order";setV("front");render();loadMenu(true)}
+function loadMap(quiet){call("getFloor",[],function(d){TB=d.tables;TS=d.states;TG=d.guests||{};if(document.body.dataset.v==="map")drawMap();drawChips()},quiet?function(){}:function(m){$("tmap").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
+function chip(k,l){return'<button class="ch s-'+tstate(k)+(ordering&&curKey()===k?" cur":"")+'" data-ch="'+esc(k)+'">'+esc(l)+"</button>"}
+function drawChips(){$("chips").innerHTML=TB.map(function(t){return chip(t.n,t.n)}).join("")+chip("外帶","外帶")}
+function drawMap(){$("tmap").innerHTML='<div class="tcan">'+TB.map(function(t){var st=tstate(t.n),s=TS[t.n],c;
+ if(st==="draft")c='<span class="tv">點餐中</span><small>已點 '+dcount(t.n)+" 項</small>";
+ else if(st==="dine")c='<span class="nb">單 '+esc(s.no)+"</span><small>$"+s.sum+(s.mins>=1?" · "+s.mins+" 分":"")+"</small>";
+ else if(st==="paid")c='<span class="nb"><em>$</em>'+esc(s.no)+"</span><small>已結帳</small>";
+ else c='<span class="tp">＋</span>';
+ return'<button class="tt s-'+st+(t.w<=11?" tn":"")+'" style="left:'+t.x+"%;top:"+t.y+"%;width:"+t.w+"%;height:"+t.h+'%" data-tt="'+esc(t.n)+'"><div class="tl"><b>'+esc(t.n)+"</b><i>👥"+((st!=="empty"&&TG[t.n])||0)+"/"+t.s+'</i></div><div class="tr">'+c+"</div></button>"}).join("")+'</div><div class="tside">'+(tabSel==="order"?'<div class="pk">請選擇桌號<br>或按「外帶」</div>':"")+'<button class="tbtn" id="tTake">外帶'+(dcount("外帶")?"（點餐中）":"")+'</button><button class="tbtn" id="tPay">結帳</button><button class="tbtn tg2" id="tRef">重新整理</button><div class="tleg"><i></i>空桌<br><i style="background:#f08a00"></i>點餐中（未送出）<br><i style="background:#12946f"></i>已送出・未結帳<br><i style="background:#8fd3f4"></i>已結帳</div></div>'}
+function tapTable(n){var st=tstate(n),s=TS[n];if(st==="draft"){startOrder(n);return}if(st==="empty"){askGuests(n,true);return}
+ $("dlg").innerHTML='<h3>桌 '+esc(n)+" · "+TLAB[st]+"</h3>"+(st==="dine"?'<p style="font-size:22px">單 '+esc(s.no)+"，未結帳 "+s.n+' 張，合計 <b>$'+s.sum+"</b>"+(TG[n]?"（👥 "+TG[n]+" 人）":"")+"</p>":'<p style="font-size:20px">這桌已結帳，可重新開桌點餐。</p>')+'<div class="acts"><button class="ghost" id="back">取消</button>'+(st==="dine"?'<button class="ghost" data-tp="pay" data-tn="'+esc(n)+'">結帳</button><button class="ghost" data-tp="guests" data-tn="'+esc(n)+'">更改人數</button>':"")+'<button class="go" data-tp="'+(st==="dine"?"add":"new")+'" data-tn="'+esc(n)+'">'+(st==="dine"?"加點":"開新單點餐")+"</button></div>";$("ov").classList.add("show")}
+$("tmap").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.dataset.tt)tapTable(b.dataset.tt);else if(b.id==="tTake")startOrder(null);else if(b.id==="tPay")openPay("");else if(b.id==="tRef")loadMap()};
+$("chips").onclick=function(e){var b=e.target.closest("button");if(!b)return;var k=b.dataset.ch;if(k==="外帶")startOrder(null);else if(tstate(k)==="empty"&&!(ordering&&curKey()===k))askGuests(k,true);else startOrder(k)};
+function askGuests(label,open){gAsk={label:label,open:open};var cur=TG[label],h='<h3>桌 '+esc(label)+" · 幾位客人？</h3>"+'<div class="tbl">';for(var i=1;i<=12;i++)h+='<button data-gn="'+i+'"'+(cur===i?' class="on"':"")+">"+i+"</button>";
+ $("dlg").innerHTML=h+'</div><div class="vr"><input id="gx" inputmode="numeric" maxlength="2" placeholder="其他人數" style="flex:1"><button class="ghost" id="gok">確定</button></div><div class="acts"><button class="ghost" id="back">取消</button>'+(open?'<button class="ghost" id="gskip">略過</button>':"")+"</div>";$("ov").classList.add("show")}
+function setGuests2(n){var l=gAsk.label,o=gAsk.open;call("setGuests",[l,n],function(){TG[l]=n;closeOv();if(o)startOrder(l);else{drawChips();if(document.body.dataset.v==="map")drawMap();else renderCart()}})}
+setInterval(function(){var v=document.body.dataset.v;if((v==="map"||v==="front")&&!$("ov").classList.contains("show")&&!$("pay").classList.contains("show"))loadMap(true)},8000);
+/* 後台：桌位編輯（拖曳） */
+var ET=[],es=-1;
+function tFloor(){call("getFloor",[],function(d){ET=d.tables.map(function(t){return{n:t.n,s:t.s,x:t.x,y:t.y,w:t.w,h:t.h}});es=-1;drawFloor()},bad)}
+function drawFloor(){var t=ET[es];$("tb").innerHTML='<p style="color:var(--mute)">拖曳桌子調整位置；點一下桌子可改名稱、座位數和大小。</p><div class="fcan" id="fcan">'+ET.map(function(t,i){return'<div class="fd'+(i===es?" sel":"")+'" data-i="'+i+'" style="left:'+t.x+"%;top:"+t.y+"%;width:"+t.w+"%;height:"+t.h+'%"><b>'+esc(t.n)+"</b><i>"+t.s+" 人</i></div>"}).join("")+'</div><div class="pwf">'+(t?'<label>桌名<input id="fn" value="'+esc(t.n)+'" maxlength="8"></label><label>座位數<input id="fs" inputmode="numeric" value="'+t.s+'"></label><label>寬度（4–40）<input id="fw" inputmode="numeric" value="'+t.w+'"></label><label>高度（4–40）<input id="fh" inputmode="numeric" value="'+t.h+'"></label><button id="fdel">刪除這桌</button>':'<span style="color:var(--mute)">點選上方的桌子來編輯</span>')+'</div><div class="ah"><button id="fadd">＋新增桌子</button><span class="sp"></span><button class="pri" id="fsave">儲存桌位</button></div>'}
+$("admin").addEventListener("pointerdown",function(e){var el=e.target.closest(".fd");if(!el)return;var i=+el.dataset.i,box=$("fcan").getBoundingClientRect(),t=ET[i],ox=(e.clientX-box.left)/box.width*100-t.x,oy=(e.clientY-box.top)/box.height*100-t.y,moved=false;
+ var mv=function(ev){moved=true;t.x=Math.max(0,Math.min(100-t.w,Math.round(((ev.clientX-box.left)/box.width*100-ox)*2)/2));t.y=Math.max(0,Math.min(100-t.h,Math.round(((ev.clientY-box.top)/box.height*100-oy)*2)/2));el.style.left=t.x+"%";el.style.top=t.y+"%"},up=function(){document.removeEventListener("pointermove",mv);document.removeEventListener("pointerup",up);es=i;drawFloor()};
+ document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up);e.preventDefault()});
 loginUI();setV("login");render();
 </script>
 </body>
