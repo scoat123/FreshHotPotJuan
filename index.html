@@ -237,27 +237,28 @@ body[data-v="kitchen"] #kitchen.sv{display:flex;flex-direction:column;overflow:h
 #tmap{display:none;height:calc(100% - var(--tb));padding:12px;gap:12px}
 body[data-v="map"] #tmap{display:flex}
 .tcan{position:relative;flex:1;min-width:0;background:var(--surf);border-radius:16px;border:2px solid var(--line)}
-.tt{position:absolute;border-radius:10px;background:#232020;color:#fff;text-align:left;padding:6px 10px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.25)}
+.tt{position:absolute;border-radius:10px;background:#dcdcdc;color:#2a1a17;border:2px solid #b8b8b8;text-align:left;padding:6px 10px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.25)}
 .tt.tn{flex-direction:column;align-items:flex-start;justify-content:space-between}
 .tl{display:flex;flex-direction:column;min-width:0;white-space:nowrap}
 .tr{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .tt.tn .tr{align-items:flex-start}
 .tt.tn.s-empty{flex-direction:row;align-items:center}
 .tt.tn small{display:none}
+.tt.tn .tp{font-size:28px}
 .tt b{font-size:clamp(20px,2.8vw,34px);line-height:1.1}
 .tt i{font-style:normal;font-size:15px;opacity:.8}
 .tt .tp{font-size:38px;opacity:.45;line-height:1}
 .tt .tv{font-size:clamp(18px,2vw,24px);font-weight:800}
 .tt small{font-size:15px;font-weight:700}
-.tt.s-draft{background:#f08a00;color:#2a1a17}.tt.s-dine{background:#12946f}.tt.s-paid{background:#8fd3f4;color:#14303f}
+.tt.s-draft{background:#f08a00;color:#2a1a17;border-color:#d17600}.tt.s-dine{background:#12946f;color:#fff;border-color:#0d7a5b}.tt.s-paid{background:#8fd3f4;color:#14303f;border-color:#6bbbe3}
 .tside{flex:0 0 170px;display:flex;flex-direction:column;gap:10px}
 .tbtn{height:72px;border-radius:14px;background:var(--red);color:#fff;font-size:24px;font-weight:800}
 .tleg{margin-top:auto;font-size:16px;line-height:2}
-.tleg i{display:inline-block;width:16px;height:16px;border-radius:4px;margin-right:8px;vertical-align:-2px;background:#232020}
+.tleg i{display:inline-block;width:16px;height:16px;border-radius:4px;margin-right:8px;vertical-align:-2px;background:#dcdcdc;border:1px solid #b8b8b8}
 .tbn{height:52px;padding:0 16px;border-radius:12px;background:var(--bg);border:2px solid var(--line);font-weight:800}
 .tbl2{flex:1;text-align:right;font-size:26px;font-weight:800;color:var(--red);align-self:center}
 .fcan{position:relative;height:min(60vh,540px);background:var(--surf);border:2px solid var(--line);border-radius:16px;touch-action:none;margin-bottom:12px}
-.fd{position:absolute;background:#232020;color:#fff;border-radius:10px;padding:6px 8px;touch-action:none;user-select:none;cursor:grab;overflow:hidden}
+.fd{position:absolute;background:#dcdcdc;color:#2a1a17;border:2px solid #b8b8b8;border-radius:10px;padding:6px 8px;touch-action:none;user-select:none;cursor:grab;overflow:hidden}
 .fd.sel{outline:4px solid var(--yel)}.fd b{font-size:20px}.fd i{display:block;font-style:normal;font-size:14px;opacity:.8}
 html{--tb:56px}
 body.guest{--tb:0px}
@@ -269,10 +270,10 @@ body.guest #topbar{display:none!important}
 #topbar .lo{background:transparent;border:2px solid #7a6a65;font-size:16px;padding:0 16px}
 #chips{flex:1;display:flex;gap:8px;overflow-x:auto;padding:3px}
 body.guest #chips{display:none}
-.ch{flex:none;height:44px;min-width:56px;padding:0 12px;border-radius:10px;font-weight:800;font-size:18px;background:#232020;color:#fff;border:3px solid transparent}
-.ch.s-draft{background:#f08a00;color:#2a1a17}.ch.s-dine{background:#12946f}.ch.s-paid{background:#8fd3f4;color:#14303f}
+.ch{flex:none;height:44px;min-width:56px;padding:0 12px;border-radius:10px;font-weight:800;font-size:18px;background:#dcdcdc;color:#2a1a17;border:3px solid transparent}
+.ch.s-draft{background:#f08a00;color:#2a1a17}.ch.s-dine{background:#12946f;color:#fff}.ch.s-paid{background:#8fd3f4;color:#14303f}
 .ch.cur{border-color:#fff;box-shadow:0 0 0 3px var(--yel)}
-.nb{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#2a1a17;border-radius:6px;padding:1px 8px;font-size:clamp(18px,2.2vw,26px);font-weight:800}
+.nb{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;background:#fff;color:#2a1a17;border-radius:6px;padding:1px 8px;font-size:clamp(18px,2.2vw,26px);font-weight:800}
 .nb em{font-style:normal;background:#1a86c9;color:#fff;border-radius:4px;padding:0 6px;font-size:.8em}
 .pk{background:var(--yel);color:#2a1a17;border-radius:12px;padding:10px;font-weight:800;font-size:18px;text-align:center}
 .tg2{background:var(--bg);color:var(--ink);border:2px solid var(--line)}
@@ -507,7 +508,7 @@ function chip(k,l){return'<button class="ch s-'+tstate(k)+(ordering&&curKey()===
 function drawChips(){$("chips").innerHTML=TB.map(function(t){return chip(t.n,t.n)}).join("")+chip("外帶","外帶")}
 function drawMap(){$("tmap").innerHTML='<div class="tcan">'+TB.map(function(t){var st=tstate(t.n),s=TS[t.n],c;
  if(st==="draft")c='<span class="tv">點餐中</span><small>已點 '+dcount(t.n)+" 項</small>";
- else if(st==="dine")c='<span class="nb">單 '+esc(s.no)+"</span><small>$"+s.sum+(s.mins>=1?" · "+s.mins+" 分":"")+"</small>";
+ else if(st==="dine")c='<span class="nb">📄'+esc(s.no)+"</span><small>$"+s.sum+(s.mins>=1?" · "+s.mins+" 分":"")+"</small>";
  else if(st==="paid")c='<span class="nb"><em>$</em>'+esc(s.no)+"</span><small>已結帳</small>";
  else c='<span class="tp">＋</span>';
  return'<button class="tt s-'+st+(t.w<=11?" tn":"")+'" style="left:'+t.x+"%;top:"+t.y+"%;width:"+t.w+"%;height:"+t.h+'%" data-tt="'+esc(t.n)+'"><div class="tl"><b>'+esc(t.n)+"</b><i>👥"+((st!=="empty"&&TG[t.n])||0)+"/"+t.s+'</i></div><div class="tr">'+c+"</div></button>"}).join("")+'</div><div class="tside">'+(tabSel==="order"?'<div class="pk">請選擇桌號<br>或按「外帶」</div>':"")+'<button class="tbtn" id="tTake">外帶'+(dcount("外帶")?"（點餐中）":"")+'</button><button class="tbtn" id="tPay">結帳</button><button class="tbtn tg2" id="tRef">重新整理</button><div class="tleg"><i></i>空桌<br><i style="background:#f08a00"></i>點餐中（未送出）<br><i style="background:#12946f"></i>已送出・未結帳<br><i style="background:#8fd3f4"></i>已結帳</div></div>'}
