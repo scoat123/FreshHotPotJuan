@@ -185,12 +185,12 @@ body.guest nav button{font-size:20px;padding:22px 8px}
 .seg small{display:block;font-weight:400;font-size:14px;opacity:.85;margin-top:4px}
 .kw{display:flex;gap:14px;align-items:flex-start}
 .kq{flex:0 0 210px;overflow:auto;display:flex;flex-direction:column;gap:8px}
-.qi{display:block;width:100%;background:#2a1d1a;color:#f6e9e2;border-radius:12px;padding:10px 12px;text-align:left;border-left:8px solid #ffd52e}
-.qi.st1{border-color:#4cc38a}.qi.st2{border-color:#4aa3ff}.qi.sel{outline:3px solid #fff}
-.qi b{font-size:22px}.qi small{display:block;opacity:.75}
+.qi{display:block;width:100%;background:#2a1d1a;color:#f6e9e2;border-radius:12px;padding:10px 12px;text-align:left;border-left:8px solid #4a403d}
+.qi.sel{outline:3px solid #fff}
+.qi b.qn{font-size:34px;line-height:1.1;font-weight:800}.qi .tz{font-size:16px;font-weight:600;margin-right:4px;opacity:.8}.qi small{display:block;opacity:.7;font-size:14px}
 .kf{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
 .fh{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:4px 0}
-.fn{font-size:34px;font-weight:800}.ft{font-size:30px;font-weight:800;color:#ffd52e;margin-left:10px}
+.ft{font-size:52px;font-weight:800;color:#ffd52e;line-height:1.1}.fn{font-size:16px;font-weight:600;color:#9a8c86;margin-left:12px}
 .fm{display:block;color:#b3a199}
 .act{height:64px;padding:0 28px;border-radius:14px;font-size:22px;font-weight:800;background:var(--red);color:#fff}
 .nt.big{font-size:20px;font-weight:700;margin:6px 0}
@@ -219,10 +219,9 @@ body[data-v="kitchen"] #kitchen.sv{display:flex;flex-direction:column;overflow:h
 .kx{margin-top:10px;background:#fff3bf;color:#5c4400;padding:8px 12px;border-radius:8px}
 @media (max-width:900px){.kw{flex-direction:column}.kq{flex:none;position:static;flex-direction:row;overflow:auto;max-height:none;width:100%}.qi{min-width:150px}.kmap{grid-template-columns:1fr}}
 .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;align-items:start}
-.kcard{background:#241816;border-radius:12px;padding:10px;border-top:8px solid #ffd52e}
-.kcard.st1{border-top-color:#4cc38a}.kcard.st2{border-top-color:#4aa3ff}
+.kcard{background:#241816;border-radius:12px;padding:10px;border-top:8px solid #4a403d}
 .fh2{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.fn2{font-size:26px}.ft2{font-size:22px;font-weight:800;color:#ffd52e;margin-left:6px}
+.ft2{font-size:34px;font-weight:800;color:#ffd52e}.fn2{font-size:14px;font-weight:600;color:#9a8c86;margin-left:10px}
 .act2{height:48px;padding:0 14px;border-radius:12px;font-weight:800;font-size:17px;background:var(--red);color:#fff}
 .kall .kmap{gap:6px}.kall .kcol{gap:6px}
 .kall .ks h4{font-size:12px;padding:3px 6px}
@@ -435,19 +434,19 @@ function kmap(o,id){var byId={},byN={},hit={},extra=[];
 function keepAwake(){try{if(WL&&!WL.released)return;if(navigator.wakeLock)navigator.wakeLock.request("screen").then(function(l){WL=l}).catch(function(){})}catch(x){}}
 document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&document.body.dataset.v==="kitchen")keepAwake()});
 function flash(){var k=$("kitchen");k.classList.remove("flash");void k.offsetWidth;k.classList.add("flash");setTimeout(function(){k.classList.remove("flash")},3500)}
-function kcard(o){var n=NXT[o.status];return'<div class="kcard st'+KPR[o.status]+'"><div class="fh2"><div><b class="fn2">#'+esc(o.no)+'</b><span class="ft2">'+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'<small style="display:block;color:#b3a199">'+o.mins+" 分 · "+o.status+'</small></div><button class="act2" data-row="'+o.row+'" data-no="'+esc(o.no)+'" data-s="'+n[0]+'">'+n[1]+"</button></div>"+(o.note?'<div class="nt big">備註：'+esc(o.note)+"</div>":"")+kmap(o)+"</div>"}
+function kcard(o){var n=NXT[o.status];return'<div class="kcard st'+KPR[o.status]+'"><div class="fh2"><div><span class="ft2">'+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'<b class="fn2">#'+esc(o.no)+'</b><small style="display:block;color:#b3a199">'+o.mins+" 分 · "+o.status+'</small></div><button class="act2" data-row="'+o.row+'" data-no="'+esc(o.no)+'" data-s="'+n[0]+'">'+n[1]+"</button></div>"+(o.note?'<div class="nt big">備註：'+esc(o.note)+"</div>":"")+kmap(o)+"</div>"}
 function kfit(){var box=document.querySelector("#kitchen .kfit"),m=$("km");if(!box||!m)return;var W=box.clientWidth,H=box.clientHeight,best=null;
  for(var n=2;n<=6;n++){m.style.transform="none";m.style.columnCount=n;m.style.width=(n*300+(n-1)*10)+"px";var w=m.offsetWidth,h=m.offsetHeight,sc=Math.min(W/w,H/h,1.6);if(!best||sc>best.s+.001)best={n:n,s:sc,w:w}}
  m.style.columnCount=best.n;m.style.width=best.w+"px";m.style.transform="scale("+best.s+")";m.style.left=Math.max(0,(W-best.w*best.s)/2)+"px"}
 window.addEventListener("resize",function(){if(document.body.dataset.v==="kitchen"&&!kAll)kfit()});
-function kfocus(o){var n=NXT[o.status];return'<div class="fh"><div><span class="fn">#'+esc(o.no)+'</span><span class="ft">'+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'<span class="fm">'+o.mins+" 分鐘 · "+o.status+'</span></div><button class="act" data-row="'+o.row+'" data-no="'+esc(o.no)+'" data-s="'+n[0]+'">'+n[1]+"</button></div>"+(o.note?'<div class="nt big">備註：'+esc(o.note)+"</div>":"")+'<div class="kfit">'+kmap(o,"km")+"</div>"}
+function kfocus(o){var n=NXT[o.status];return'<div class="fh"><div><span class="ft">'+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+'<span class="fn">#'+esc(o.no)+'</span><span class="fm">'+o.mins+" 分鐘 · "+o.status+'</span></div><button class="act" data-row="'+o.row+'" data-no="'+esc(o.no)+'" data-s="'+n[0]+'">'+n[1]+"</button></div>"+(o.note?'<div class="nt big">備註：'+esc(o.note)+"</div>":"")+'<div class="kfit">'+kmap(o,"km")+"</div>"}
 function kDraw(d){var pr={"待處理":0,"製作中":1,"待送餐":2},cnt=function(t){return d.orders.filter(function(o){return o.status===t}).length};
  KO=d.orders.slice().sort(function(a,b){return pr[a.status]-pr[b.status]||a.row-b.row});
  var p=cnt("待處理"),m=cnt("製作中"),r=cnt("待送餐");
  keepAwake();if(lastP>=0&&p>lastP){beep();flash()}lastP=p;if(lastR>=0&&r>lastR)beep();lastR=r;
  if(!KO.some(function(o){return o.row===kSel}))kSel=KO.length?KO[0].row:0;
  var sel=KO.filter(function(o){return o.row===kSel})[0],st=$("kitchen").scrollTop,qs=$("kitchen").querySelector(".kq"),qt=qs?qs.scrollTop:0;
- $("kitchen").innerHTML='<div class="ah"><h1>廚房／送餐</h1><span class="tag">待處理 '+p+'</span><span class="tag">製作中 '+m+'</span><span class="tag">待送餐 '+r+'</span><span class="sp"></span><button id="kAllBtn">'+(kAll?"單張檢視":"全部展開")+'</button></div>'+(kAll?'<div class="kgrid kall">'+(KO.map(kcard).join("")||'<div class="empty">目前沒有需要處理的訂單</div>')+"</div>":'<div class="kw"><div class="kq">'+(KO.map(function(o){return'<button class="qi st'+pr[o.status]+(o.row===kSel?" sel":"")+'" data-q="'+o.row+'"><b>#'+esc(o.no)+"</b> "+(o.mode==="內用"?"桌 "+esc(o.table):"外帶")+(o.addon?" ・追加":"")+"<small>"+o.status+" · "+o.mins+" 分 · "+o.lines.reduce(function(s,l){return s+l.q},0)+" 項</small></button>"}).join("")||'<div class="empty">沒有訂單</div>')+'</div><div class="kf">'+(sel?kfocus(sel):'<div class="empty">目前沒有需要處理的訂單</div>')+"</div></div>");
+ $("kitchen").innerHTML='<div class="ah"><h1>廚房／送餐</h1><span class="tag">待處理 '+p+'</span><span class="tag">製作中 '+m+'</span><span class="tag">待送餐 '+r+'</span><span class="sp"></span><button id="kAllBtn">'+(kAll?"單張檢視":"全部展開")+'</button></div>'+(kAll?'<div class="kgrid kall">'+(KO.map(kcard).join("")||'<div class="empty">目前沒有需要處理的訂單</div>')+"</div>":'<div class="kw"><div class="kq">'+(KO.map(function(o){return'<button class="qi st'+pr[o.status]+(o.row===kSel?" sel":"")+'" data-q="'+o.row+'"><b class="qn">'+(o.mode==="內用"?'<span class="tz">桌</span>'+esc(o.table):"外帶")+"</b>"+(o.addon?' <span class="tag">追加</span>':"")+"<small>#"+esc(o.no)+" · "+o.status+" · "+o.mins+" 分 · "+o.lines.reduce(function(s,l){return s+l.q},0)+" 項</small></button>"}).join("")||'<div class="empty">沒有訂單</div>')+'</div><div class="kf">'+(sel?kfocus(sel):'<div class="empty">目前沒有需要處理的訂單</div>')+"</div></div>");
  $("kitchen").classList.toggle("sv",!kAll);if(!kAll)kfit();
  $("kitchen").scrollTop=st;var q2=$("kitchen").querySelector(".kq");if(q2)q2.scrollTop=qt}
 $("kitchen").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.id==="kOut")logout();else if(b.id==="kBack"){setV("admin");renderAdmin()}else if(b.id==="kAllBtn"){kAll=!kAll;kDraw({orders:KO})}else if(b.dataset.q){kSel=+b.dataset.q;kDraw({orders:KO})}else if(b.dataset.row){b.disabled=true;call("setStatus",[+b.dataset.row,b.dataset.no,b.dataset.s],function(){kLoad()},function(m){alert(m);kLoad()})}};
