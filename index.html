@@ -275,6 +275,7 @@ body.guest #chips{display:none}
 .nb{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;background:#fff;color:#2a1a17;border-radius:6px;padding:1px 8px;font-size:clamp(18px,2.2vw,26px);font-weight:800}
 .nb em{font-style:normal;background:#1a86c9;color:#fff;border-radius:4px;padding:0 6px;font-size:.8em}
 .pk{background:var(--yel);color:#2a1a17;border-radius:12px;padding:10px;font-weight:800;font-size:18px;text-align:center}
+.pwf button.on{background:var(--yel);color:#2a1a17;border-color:var(--red)}
 .tg2{background:var(--bg);color:var(--ink);border:2px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -400,7 +401,7 @@ function setV(v){document.body.dataset.v=v;drawTabs()}
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 3.6</p></div>';dots()}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 3.7</p></div>';dots()}
 function enter(){role="b";lastP=-1;tabSel="map";ordering=false;setV("map");loadMenu(true);loadMap()}
 var TABN=[["map","桌號狀態"],["order","點餐畫面"],["kitchen","廚房畫面"],["admin","後台"]];
 function drawTabs(){$("topbar").innerHTML=TABN.map(function(t){return'<button data-tab="'+t[0]+'" class="'+(t[0]===tabSel?"on":"")+'">'+t[1]+"</button>"}).join("")+'<span class="sp"></span><button data-tab="out" class="lo">登出</button>'}
@@ -470,8 +471,8 @@ function rPreset(k,base){var nx=addD(base,1);
  return[base.slice(0,8)+"01 00:00",nx+" 00:00"]}
 function tReport(){call("getSettings",[],function(st){SPL=/^\d{2}:\d{2}$/.test(st.shiftSplit)?st.shiftSplit:"16:00";var td=ymd(new Date());
  $("tb").innerHTML='<div class="pwf"><label>日期<input type="date" id="rdate" value="'+td+'"></label>'+["午市","晚市","全日","昨日","本週","本月"].map(function(k){return'<button data-rp="'+k+'">'+k+(k==="全日"?"（日報）":"")+"</button>"}).join("")+'</div><div class="pwf"><label>自訂開始<input type="datetime-local" id="rf"></label><label>自訂結束<input type="datetime-local" id="rt"></label><button id="rq">查詢</button></div><p style="color:var(--mute);font-size:15px">午市＝當天 00:00 到 '+esc(SPL)+'；晚市＝'+esc(SPL)+' 到隔天 00:00（分界時間可在「設定」修改）。</p><div id="rbody"></div><h3>結班紀錄</h3><div id="rclose"></div>';
- var r=rPreset("全日",td);rQuery(r[0],r[1],"全日");loadCloses()},bad)}
-function rQuery(from,to,shift){RP={from:from,to:to,shift:shift,date:$("rdate").value||ymd(new Date())};$("rf").value=from.replace(" ","T");$("rt").value=to.replace(" ","T");$("rbody").innerHTML='<div class="empty">計算中…</div>';
+ var nw=new Date(),hm=d2(nw.getHours())+":"+d2(nw.getMinutes()),k=hm<SPL?"午市":"晚市",r=rPreset(k,td);rQuery(r[0],r[1],k,k);loadCloses()},bad)}
+function rQuery(from,to,shift,key){RP={from:from,to:to,shift:shift,date:$("rdate").value||ymd(new Date())};$("rf").value=from.replace(" ","T");$("rt").value=to.replace(" ","T");$("rbody").innerHTML='<div class="empty">計算中…</div>';[].forEach.call(document.querySelectorAll("[data-rp]"),function(x){x.classList.toggle("on",x.dataset.rp===key)});
  call("getReport2",[from,to],rRender,function(m){$("rbody").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
 function rRender(d){RD=d;var by=d.rec.by,mx=d.top.length?d.top[0].q:1,dm=Math.max.apply(null,d.days.map(function(x){return x.s}).concat([1]));
  $("rbody").innerHTML='<h3>'+esc(d.from)+" ～ "+esc(d.to)+'</h3><div class="stats"><div>訂單數<b>'+d.count+'</b></div><div>營業額（下單）<b>$'+d.sum+'</b></div><div>平均客單<b>$'+d.avg+'</b></div></div><div class="stats"><div>實際收款（收款時間）<b>$'+d.rec.total+'</b>'+d.rec.c+' 筆</div>'+["現金","行動支付","信用卡","其他"].map(function(k){return"<div>"+k+"<b>$"+((by[k]||{s:0}).s)+"</b>"+((by[k]||{c:0}).c)+" 筆</div>"}).join("")+'</div><div class="stats"><div>內用<b>'+d.dine.c+' 筆</b>$'+d.dine.s+'</div><div>外帶<b>'+d.take.c+' 筆</b>$'+d.take.s+'</div><div>未收款<b>$'+d.unpaid.s+'</b>'+d.unpaid.c+' 張</div><div>作廢<b>'+d.cancel.c+' 張</b>$'+d.cancel.s+'</div></div>'+(RP.shift?'<div class="ah"><button class="pri" data-cl="'+RP.shift+'">'+(RP.shift==="全日"?"日結（記錄日報）":"結"+RP.shift+"小帳")+'</button></div>':"")
@@ -498,7 +499,7 @@ $("admin").onclick=function(e){var b=e.target.closest("button");if(!b)return;var
  else if(i==="fadd"){ET.push({n:"T"+(ET.length+1),s:4,x:40,y:40,w:14,h:10});es=ET.length-1;drawFloor()}
  else if(i==="fdel"){ET.splice(es,1);es=-1;drawFloor()}
  else if(i==="fsave"){call("saveTables",[ET],function(){alert("桌位已儲存")})}
- else if(b.dataset.rp){var rr=rPreset(b.dataset.rp,$("rdate").value||ymd(new Date()));rQuery(rr[0],rr[1],/^(午市|晚市|全日)$/.test(b.dataset.rp)?b.dataset.rp:"")}
+ else if(b.dataset.rp){var rr=rPreset(b.dataset.rp,$("rdate").value||ymd(new Date()));rQuery(rr[0],rr[1],/^(午市|晚市|全日)$/.test(b.dataset.rp)?b.dataset.rp:"",b.dataset.rp)}
  else if(i==="rq"){var f1=$("rf").value.replace("T"," "),t1=$("rt").value.replace("T"," ");if(!f1||!t1||f1>=t1){alert("請選擇正確的起訖時間");return}rQuery(f1,t1,"")}
  else if(b.dataset.cl)openClose(b.dataset.cl)
  else if(i==="spSave"){var sv=$("sp").value;if(!sv){alert("請選擇時間");return}call("setShiftSplit",[sv],function(){alert("已儲存")})}
