@@ -400,7 +400,7 @@ function setV(v){document.body.dataset.v=v;drawTabs()}
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 3.5</p></div>';dots()}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 3.6</p></div>';dots()}
 function enter(){role="b";lastP=-1;tabSel="map";ordering=false;setV("map");loadMenu(true);loadMap()}
 var TABN=[["map","桌號狀態"],["order","點餐畫面"],["kitchen","廚房畫面"],["admin","後台"]];
 function drawTabs(){$("topbar").innerHTML=TABN.map(function(t){return'<button data-tab="'+t[0]+'" class="'+(t[0]===tabSel?"on":"")+'">'+t[1]+"</button>"}).join("")+'<span class="sp"></span><button data-tab="out" class="lo">登出</button>'}
@@ -468,7 +468,7 @@ function rPreset(k,base){var nx=addD(base,1);
  if(k==="昨日")return[addD(base,-1)+" 00:00",base+" 00:00"];
  if(k==="本週"){var dw=(new Date(base+"T12:00:00").getDay()+6)%7;return[addD(base,-dw)+" 00:00",nx+" 00:00"]}
  return[base.slice(0,8)+"01 00:00",nx+" 00:00"]}
-function tReport(){call("getSettings",[],function(st){SPL=st.shiftSplit||"16:00";var td=ymd(new Date());
+function tReport(){call("getSettings",[],function(st){SPL=/^\d{2}:\d{2}$/.test(st.shiftSplit)?st.shiftSplit:"16:00";var td=ymd(new Date());
  $("tb").innerHTML='<div class="pwf"><label>日期<input type="date" id="rdate" value="'+td+'"></label>'+["午市","晚市","全日","昨日","本週","本月"].map(function(k){return'<button data-rp="'+k+'">'+k+(k==="全日"?"（日報）":"")+"</button>"}).join("")+'</div><div class="pwf"><label>自訂開始<input type="datetime-local" id="rf"></label><label>自訂結束<input type="datetime-local" id="rt"></label><button id="rq">查詢</button></div><p style="color:var(--mute);font-size:15px">午市＝當天 00:00 到 '+esc(SPL)+'；晚市＝'+esc(SPL)+' 到隔天 00:00（分界時間可在「設定」修改）。</p><div id="rbody"></div><h3>結班紀錄</h3><div id="rclose"></div>';
  var r=rPreset("全日",td);rQuery(r[0],r[1],"全日");loadCloses()},bad)}
 function rQuery(from,to,shift){RP={from:from,to:to,shift:shift,date:$("rdate").value||ymd(new Date())};$("rf").value=from.replace(" ","T");$("rt").value=to.replace(" ","T");$("rbody").innerHTML='<div class="empty">計算中…</div>';
