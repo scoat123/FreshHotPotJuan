@@ -1,7 +1,5 @@
-/* 鮮味愛喝湯（線上版）離線快取：先用快取、背景更新；安裝新版時略過瀏覽器快取，確保拿到最新檔案。
-   只快取同網站的頁面檔案；連到 Google（Apps Script）的訂單與資料請求不經過快取。
-   ★ 每次更新 index.html 後，請把下面的版本號加 1（例如 v311 → v312），平板才會跳出「有新版本了」。 */
-var CACHE = 'freshpot-online-v311';
+/* 鮮味愛喝湯 離線快取：先用快取、背景更新；安裝新版時略過瀏覽器快取，確保拿到最新檔案 */
+var CACHE = 'freshpot-v25';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return Promise.all(FILES.map(function (u) { return fetch(new Request(u, { cache: 'reload' })).then(function (r) { if (!r.ok) throw new Error(u); return c.put(u, r); }); })); }).then(function () { return self.skipWaiting(); }));
