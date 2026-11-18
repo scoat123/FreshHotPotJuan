@@ -274,6 +274,7 @@ body[data-v="map"] #tmap{display:flex}
 .tcan{position:relative;flex:1;min-width:0;background:var(--surf);border-radius:16px;border:2px solid var(--line)}
 .tt{position:absolute;border-radius:10px;background:#dcdcdc;color:#2a1a17;border:2px solid #b8b8b8;text-align:left;padding:6px 10px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.25)}
 .tt{touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.tt.dsrc{opacity:.4}.tt.dtg{outline:5px solid #ffd52e;box-shadow:0 0 0 9px rgba(255,213,46,.55);z-index:5}#tdz{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:75;background:#6b6b6b;color:#fff;border:4px dashed #fff;border-radius:18px;padding:18px 34px;font-size:24px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.5)}#tdz.on{background:#c4161c;transform:translateX(-50%) scale(1.08)}
+.dpl{display:flex;flex-direction:column;gap:10px;margin:8px 0}.dpl button{min-height:72px;border-radius:14px;background:#3b2a25;color:#fff;text-align:left;padding:10px 18px;border:2px solid #6b4a40}.dpl button b{display:block;font-size:24px}.dpl button small{font-size:16px;color:#e8d5c8}
 .tdg{position:fixed;z-index:80;pointer-events:none;transform:translate(-50%,-130%);background:#c4161c;color:#fff;border-radius:14px;padding:10px 18px;font-size:24px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .tt.tn{flex-direction:column;align-items:flex-start;justify-content:space-between}
 .tl{display:flex;flex-direction:column;min-width:0;white-space:nowrap}
@@ -287,7 +288,7 @@ body[data-v="map"] #tmap{display:flex}
 .tt .tp{font-size:38px;opacity:.45;line-height:1}
 .tt .tv{font-size:clamp(18px,2vw,24px);font-weight:800}
 .tt small{font-size:15px;font-weight:700}
-.tt.s-draft{background:#f08a00;color:#2a1a17;border-color:#d17600}.tt.s-dine{background:#12946f;color:#fff;border-color:#0d7a5b}.tt.s-paid{background:#8fd3f4;color:#14303f;border-color:#6bbbe3}
+.tt.s-draft{background:#f08a00;color:#2a1a17;border-color:#d17600}.tt.s-dine{background:#12946f;color:#fff;border-color:#0d7a5b}.tt.s-paid{background:#8fd3f4;color:#14303f;border-color:#6bbbe3}.tt.s-merged{background:repeating-linear-gradient(45deg,#c9c9c9,#c9c9c9 8px,#e4e4e4 8px,#e4e4e4 16px);color:#444;border-color:#8a8a8a}
 .tside{flex:0 0 170px;display:flex;flex-direction:column;gap:10px}
 .tbtn{height:72px;border-radius:14px;background:var(--red);color:#fff;font-size:24px;font-weight:800}
 .tleg{margin-top:auto;font-size:16px;line-height:2}
@@ -396,7 +397,7 @@ var DEFAULT_TABLES = [
   gt('H11', 4, 32, 18, 8, 6), gt('H2', 5, 8, 18, 8, 6), gt('A1', 2, 18, 18, 6, 6), gt('H1', 6, 24, 18, 8, 6)
 ];
 /* 訂單欄位（與原試算表相同）：0時間 1單號 2類型 3桌號 4品項 5備註 6金額 7明細JSON 8狀態 9收款 10付款方式 11收款時間 12追加 13併單結帳 14原桌號 */
-var MUT = { clearTable:1, saveItem:1, setItemOn:1, deleteItem:1, submitOrder:1, setStatus:1, setPassword:1, clearOrders:1, payOrders:1, voidOrder:1,
+var MUT = { swapTables:1, mergeTables:1, unmergeTable:1, clearTable:1, saveItem:1, setItemOn:1, deleteItem:1, submitOrder:1, setStatus:1, setPassword:1, clearOrders:1, payOrders:1, voidOrder:1,
   setPayMode:1, saveTables:1, setGuests:1, closeShift:1, setShiftSplit:1, moveTable:1, importBackup:1 };
 
 var DB = null, store = null, initP = null, chain = Promise.resolve();
@@ -577,6 +578,7 @@ function submitOrder(token, o) {
   var a = auth_(token); if (a.err) return a;
   if (!o || (o.mode !== '內用' && o.mode !== '外帶')) return { err: '訂單類型錯誤' };
   if (o.mode === '內用' && !String(o.table || '').trim()) return { err: '請選擇桌號' };
+  if (o.mode === '內用' && DB.conf.merged && DB.conf.merged[String(o.table).trim()]) return { err: '桌 ' + String(o.table).trim() + ' 已併入 ' + DB.conf.merged[String(o.table).trim()] + '，請在 ' + DB.conf.merged[String(o.table).trim()] + ' 點餐' };
   if (!o.lines || !o.lines.length || o.lines.length > 100) return { err: '訂單內容錯誤' };
   var by = {}, total = 0, items = [], json = [];
   readMenu_().items.forEach(function (i) { by[i.id] = i; });
@@ -722,6 +724,8 @@ function getFloor(token) {
     if (e.n) out[k] = { st: 'dine', sum: e.sum, n: e.n, no: e.no, mins: Math.max(0, Math.floor((now - e.first) / 60000)) };
     else if (e.lastPaid && now - e.lastPaid < 3600000 && e.lastPaid > ((DB.conf.cleared || {})[k] || 0)) out[k] = { st: 'paid', sum: 0, n: 0, no: e.paidNo, mins: 0 };
   });
+  var mg = DB.conf.merged || {};
+  Object.keys(mg).forEach(function (k) { if (out[mg[k]]) out[k] = { st: 'merged', to: mg[k], sum: 0, n: 0, no: '', mins: 0 }; });
   var gj = DB.conf.guests || {}, gm = {};
   Object.keys(gj).forEach(function (k) { if (fmt(new Date(gj[k].ts)).slice(0, 10) === today) gm[k] = gj[k].n; });
   return { tables: tables_(), states: out, payMode: payMode_(), guests: gm };
@@ -751,6 +755,7 @@ function clearTable(token, table) {   // 清空桌號：已結帳的桌子恢復
   }
   DB.conf.cleared = DB.conf.cleared || {}; DB.conf.cleared[table] = Date.now();
   if (DB.conf.guests) delete DB.conf.guests[table];
+  if (DB.conf.merged) Object.keys(DB.conf.merged).forEach(function (k) { if (k === table || DB.conf.merged[k] === table) delete DB.conf.merged[k]; });   // 併入這桌的桌子一併釋放
   return { ok: true, cleared: n };
 }
 function saveTables(token, list) {
@@ -772,6 +777,7 @@ function moveTable(token, from, to) {
   from = String(from || '').trim(); to = String(to || '').trim();
   if (!from || !to || from === to) return { err: '桌號錯誤' };
   if (!tables_().some(function (t) { return t.n === to; })) return { err: '找不到目標桌：' + to };
+  if (DB.conf.merged && (DB.conf.merged[from] || DB.conf.merged[to])) return { err: '併桌中的桌子不能換桌，請先解除併桌' };
   var o = DB.orders; if (!o.length) return { err: from + ' 目前沒有未結帳的訂單' };
   var today = todayStr(), st = Math.max(0, o.length - 400), mv = [], occupied = false;
   for (var i = st; i < o.length; i++) {
@@ -783,7 +789,77 @@ function moveTable(token, from, to) {
   mv.forEach(function (i) { o[i][3] = to; if (!String(o[i][14] || '')) o[i][14] = from; });
   var g = DB.conf.guests || {};
   if (g[from]) { g[to] = { n: (occupied && g[to] ? g[to].n : 0) + g[from].n, ts: Date.now() }; delete g[from]; DB.conf.guests = g; }
+  retarget_(from, to, false);
   return { ok: true, moved: mv.length, merged: occupied };
+}
+
+// ---------- 換桌（對調）／併桌／解除併桌 ----------
+function mergedMap_() { return DB.conf.merged || (DB.conf.merged = {}); }
+function activeRows_(table) {
+  var o = DB.orders, today = todayStr(), now = Date.now(), out = [], clr = (DB.conf.cleared || {})[table] || 0;
+  for (var i = Math.max(0, o.length - 400); i < o.length; i++) {
+    var r = o[i];
+    if (r[2] !== '內用' || String(r[3]) !== table || String(r[0]).slice(0, 10) !== today || String(r[8]) === '取消') continue;
+    if (r[9] !== '已收款') { out.push(i); continue; }
+    var pm = r[11] ? tms(r[11]) : 0;
+    if (pm && now - pm < 3600000 && pm > clr) out.push(i);
+  }
+  return out;
+}
+function retarget_(a, b, swap) {
+  var m = DB.conf.merged; if (!m) return;
+  Object.keys(m).forEach(function (k) { if (m[k] === a) m[k] = b; else if (swap && m[k] === b) m[k] = a; });
+}
+function tableOk_(from, to) {
+  if (!from || !to || from === to) return '桌號錯誤';
+  var tb = tables_();
+  if (!tb.some(function (t) { return t.n === from; }) || !tb.some(function (t) { return t.n === to; })) return '找不到桌號';
+  var m = DB.conf.merged || {};
+  if (m[from]) return from + ' 已併入 ' + m[from] + '，請先解除併桌';
+  if (m[to]) return to + ' 已併入 ' + m[to] + '，不能再使用';
+  return '';
+}
+function swapTables(token, a, b) {
+  var x = auth_(token); if (x.err) return x;
+  a = String(a || '').trim(); b = String(b || '').trim();
+  var e = tableOk_(a, b); if (e) return { err: e };
+  var ra = activeRows_(a), rb = activeRows_(b);
+  if (!ra.length && !rb.length) return { err: '兩桌目前都沒有訂單' };
+  var o = DB.orders;
+  ra.forEach(function (i) { o[i][3] = b; if (!String(o[i][14] || '')) o[i][14] = a; });
+  rb.forEach(function (i) { o[i][3] = a; if (!String(o[i][14] || '')) o[i][14] = b; });
+  var g = DB.conf.guests || {}, ga = g[a], gb = g[b];
+  if (ga) g[b] = ga; else delete g[b];
+  if (gb) g[a] = gb; else delete g[a];
+  DB.conf.guests = g;
+  var c = DB.conf.cleared || {}, ca = c[a], cb = c[b];
+  if (ca) c[b] = ca; else delete c[b];
+  if (cb) c[a] = cb; else delete c[a];
+  DB.conf.cleared = c;
+  retarget_(a, b, true);
+  return { ok: true, a: ra.length, b: rb.length };
+}
+function mergeTables(token, from, to) {
+  var x = auth_(token); if (x.err) return x;
+  from = String(from || '').trim(); to = String(to || '').trim();
+  var e = tableOk_(from, to); if (e) return { err: e };
+  var rf = activeRows_(from), rt = activeRows_(to).filter(function (i) { return DB.orders[i][9] !== '已收款'; });
+  if (!rf.length) return { err: from + ' 目前沒有訂單可併' };
+  if (!rt.length) return { err: to + ' 目前沒有用餐中的訂單，請改用「換桌」' };
+  var o = DB.orders;
+  rf.forEach(function (i) { o[i][3] = to; if (!String(o[i][14] || '')) o[i][14] = from; });
+  var g = DB.conf.guests || {};
+  if (g[from]) { g[to] = { n: (g[to] ? g[to].n : 0) + g[from].n, ts: Date.now() }; delete g[from]; DB.conf.guests = g; }
+  retarget_(from, to, false);
+  mergedMap_()[from] = to;
+  return { ok: true, moved: rf.length };
+}
+function unmergeTable(token, table) {
+  var x = auth_(token); if (x.err) return x;
+  table = String(table || '').trim();
+  var m = DB.conf.merged || {};
+  if (!m[table]) return { err: table + ' 目前沒有併桌' };
+  delete m[table]; return { ok: true };
 }
 
 /* ---------- 報表（自訂時段）與結班 ---------- */
@@ -855,7 +931,7 @@ function importBackup(token, d) {
 }
 
 var API = { login: login, logout: logout, getMenu: getMenu, getMenuAdmin: getMenuAdmin, saveItem: saveItem, setItemOn: setItemOn, deleteItem: deleteItem,
-  submitOrder: submitOrder, getKitchen: getKitchen, setStatus: setStatus, serveLines: serveLines, getAdmin: getAdmin, setPassword: setPassword, clearOrders: clearOrders,
+  submitOrder: submitOrder, getKitchen: getKitchen, setStatus: setStatus, serveLines: serveLines, swapTables: swapTables, mergeTables: mergeTables, unmergeTable: unmergeTable, getAdmin: getAdmin, setPassword: setPassword, clearOrders: clearOrders,
   getTabs: getTabs, payOrders: payOrders, voidOrder: voidOrder, getSettings: getSettings, setPayMode: setPayMode, getFloor: getFloor, saveTables: saveTables,
   setGuests: setGuests, clearTable: clearTable, getReport2: getReport2, closeShift: closeShift, listCloses: listCloses, setShiftSplit: setShiftSplit, moveTable: moveTable,
   exportBackup: exportBackup, importBackup: importBackup };
@@ -1070,7 +1146,7 @@ window.addEventListener("error",function(e){alert("發生錯誤："+e.message)})
 var drafts={},ordering=false,tabSel="map",lastR=-1,guest=false,zi=null,MENU=[],cat=0,mode="內用",table=null,cart={},token=null,role=null,sel="f",pin="",tab="orders",lastP=-1,dE=null,MA=null;
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-var MUT=["clearTable","submitOrder","setStatus","serveLines","payOrders","voidOrder","saveItem","setItemOn","deleteItem","setPayMode","setGuests","moveTable","importBackup","clearOrders"],bc=window.BroadcastChannel?new BroadcastChannel("hotpot-web"):null;
+var MUT=["swapTables","mergeTables","unmergeTable","clearTable","submitOrder","setStatus","serveLines","payOrders","voidOrder","saveItem","setItemOn","deleteItem","setPayMode","setGuests","moveTable","importBackup","clearOrders"],bc=window.BroadcastChannel?new BroadcastChannel("hotpot-web"):null;
 if(bc)bc.onmessage=function(e){OFF.reload().then(function(){var v=document.body.dataset.v;if(v==="kitchen")kLoad(true);else if(v==="front"||v==="map"){if(/Item|PayMode/.test(e.data))loadMenu(true);loadMap(true)}})};
 function post(fn,args){return OFF.run(fn,args)}
 function call(fn,args,ok,fail,noTok){
@@ -1137,7 +1213,7 @@ $("dlg").onclick=function(e){var b=e.target.closest("button");if(!b)return;var i
  else if(b.dataset.gn)setGuests2(+b.dataset.gn)
  else if(i==="gok"){var gv=parseInt($("gx").value,10);if(!(gv>=1&&gv<=99)){alert("請輸入 1 到 99 的人數");return}setGuests2(gv)}
  else if(i==="gskip"){closeOv();startOrder(gAsk.label)}
- else if(b.dataset.tp){closeOv();var tp=b.dataset.tp,tn=b.dataset.tn;if(tp==="add")startOrder(tn);else if(tp==="new")askGuests(tn,true);else if(tp==="guests")askGuests(tn,false);else if(tp==="move")askMove(tn);else if(tp==="clear")askClear(tn);else if(tp==="clearok")call("clearTable",[tn],function(){delete TG[tn];loadMap(true)},function(m){alert(m);loadMap(true)});else openPay(tn)}
+ else if(b.dataset.tp){closeOv();var tp=b.dataset.tp,tn=b.dataset.tn;if(tp==="goto"){tapTable(tn);return}if(tp==="unmerge"){call("unmergeTable",[tn],function(){loadMap(true)},function(m){alert(m);loadMap(true)});return}if(tp==="add")startOrder(tn);else if(tp==="new")askGuests(tn,true);else if(tp==="guests")askGuests(tn,false);else if(tp==="move")askMove(tn);else if(tp==="clear")askClear(tn);else if(tp==="clearok")call("clearTable",[tn],function(){delete TG[tn];loadMap(true)},function(m){alert(m);loadMap(true)});else openPay(tn)}
  else if(i==="back"||i==="done"||i==="mCancel"){closeOv();if(i==="done"&&!guest&&document.body.dataset.v==="front")showMap()}
  else if(i==="send"){
   if(mode==="內用"&&!table){alert("請先選擇桌號");return}
@@ -1150,6 +1226,7 @@ $("dlg").onclick=function(e){var b=e.target.closest("button");if(!b)return;var i
  else if(b.dataset.kk){kkCap=kkCap===b.dataset.kk?null:b.dataset.kk;kkDlg()}
  else if(b.dataset.kkc){KKEY[b.dataset.kkc]="";kkSave();kkDlg()}
  else if(i==="kkReset"){KACT.forEach(function(a){KKEY[a[0]]=a[2]});kkSave();kkCap=null;kkDlg()}
+ else if(b.dataset.dp)dpRun(b.dataset.dp)
  else if(i==="bkNow")openBackup()
  else if(b.dataset.snr!=null)snapRestore(+b.dataset.snr)
  else if(b.dataset.sne!=null)snapExport(+b.dataset.sne)
@@ -1174,8 +1251,8 @@ function setV(v){document.body.dataset.v=v;drawTabs()}
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v30</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
-function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v30 · 快取 "+k.sort().pop()}).catch(function(){})}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v31</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
+function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v31 · 快取 "+k.sort().pop()}).catch(function(){})}
 var SYS={st:"loading",pending:0};
 function drawSync(){var t=SYS.st,x=SYS.pending,tx,cl;
  if(t==="ok"){tx=x?"☁ 上傳中 "+x:"☁ 已同步";cl="ok"}else if(t==="offline"){tx=x?"☁ 離線中（待上傳 "+x+"）":"☁ 離線中（連線後自動同步）";cl="wait"}else if(t==="nologin"){tx="☁ 未登入雲端";cl="bad"}else if(t==="error"){tx="☁ 同步異常";cl="bad"}else{tx="☁ 連線中…";cl="wait"}
@@ -1377,7 +1454,7 @@ $("dlg").oninput=function(e){if(e.target.id==="xp"||e.target.id==="cc")e.target.
 $("zoom").onclick=function(e){var b=e.target.closest("button[data-v]");if(b){var v=zi.v[+b.dataset.v];add(zi.id,zi.n,v.l,v.p,1);$("zoom").classList.remove("show");return}if(e.target===$("zoom")||e.target.closest("#zx"))$("zoom").classList.remove("show")};
 var PSel={},PG=[],PM="after",PF="",TB=[],TS={},TG={},gAsk=null;
 function openPay(f){PF=f||"";$("pay").innerHTML='<div class="dlg pdlg"><div class="ah"><h3 style="margin:0">結帳</h3><span class="tag" id="pmt"></span><span class="sp"></span><button class="ghost" id="pr">重新整理</button><button class="ghost" id="px">關閉</button></div><div id="pb2"><div class="empty">載入中…</div></div><div id="pbar"></div></div>';$("pay").classList.add("show");loadPay()}
-function loadPay(){call("getTabs",[],function(d){PSel={};PG=d.groups.filter(function(g){return!PF||g.label==="桌 "+PF});PM=d.payMode;pbarDraw();$("pmt").textContent=PM==="before"?"餐前結帳":"餐後結帳";$("pb2").innerHTML=PG.length?(PG.length>1&&!PF?'<p class="hint" style="margin:0 0 4px;color:var(--mute);font-size:15px">勾選兩桌以上的「併單結帳」，可一次合併收款。</p>':"")+PG.map(function(g,gi){return'<div class="pg"><h4>'+esc(g.label)+(PF?"":'<label class="ck"><input type="checkbox" data-pc="'+gi+'">併單結帳</label>')+(PM==="after"&&g.orders.some(function(o){return o.status!=="已送達"})?' <span class="tag">尚有餐點未送達</span>':"")+'</h4>'+g.orders.map(function(o){return'<div class="oh" style="font-weight:500"><span>#'+esc(o.no)+" "+esc(o.time)+' <span class="tag">'+esc(o.status)+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+(o.from?' <span class="tag">原 '+esc(o.from)+"</span>":"")+'</span><span>$'+o.total+'</span></div><p style="margin:2px 0 8px;color:var(--mute);font-size:15px">'+esc(o.items)+"</p>"}).join("")+'<div class="tot"><span>合計</span><b>$'+g.sum+'</b></div><div class="pm">'+["現金","LINE PAY"].map(function(m){return'<button data-pg="'+gi+'" data-m="'+m+'">'+m+" 收款</button>"}).join("")+"</div></div>"}).join(""):'<div class="empty">沒有未結帳的訂單</div>'},function(m){$("pb2").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
+function loadPay(){call("getTabs",[],function(d){PSel={};PG=d.groups.filter(function(g){return!PF||g.label==="桌 "+PF});PM=d.payMode;if(PPRE){PG.forEach(function(g,i){if(PPRE.indexOf(g.label.replace("桌 ",""))>-1)PSel[i]=true});PPRE=null}pbarDraw();$("pmt").textContent=PM==="before"?"餐前結帳":"餐後結帳";$("pb2").innerHTML=PG.length?(PG.length>1&&!PF?'<p class="hint" style="margin:0 0 4px;color:var(--mute);font-size:15px">勾選兩桌以上的「併單結帳」，可一次合併收款。</p>':"")+PG.map(function(g,gi){return'<div class="pg"><h4>'+esc(g.label)+(PF?"":'<label class="ck"><input type="checkbox" data-pc="'+gi+'"'+(PSel[gi]?" checked":"")+'>併單結帳</label>')+(PM==="after"&&g.orders.some(function(o){return o.status!=="已送達"})?' <span class="tag">尚有餐點未送達</span>':"")+'</h4>'+g.orders.map(function(o){return'<div class="oh" style="font-weight:500"><span>#'+esc(o.no)+" "+esc(o.time)+' <span class="tag">'+esc(o.status)+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+(o.from?' <span class="tag">原 '+esc(o.from)+"</span>":"")+'</span><span>$'+o.total+'</span></div><p style="margin:2px 0 8px;color:var(--mute);font-size:15px">'+esc(o.items)+"</p>"}).join("")+'<div class="tot"><span>合計</span><b>$'+g.sum+'</b></div><div class="pm">'+["現金","LINE PAY"].map(function(m){return'<button data-pg="'+gi+'" data-m="'+m+'">'+m+" 收款</button>"}).join("")+"</div></div>"}).join(""):'<div class="empty">沒有未結帳的訂單</div>';pbarDraw()},function(m){$("pb2").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
 function pbarDraw(){var ks=Object.keys(PSel).filter(function(k){return PSel[k]}),sum=0,names=[];ks.forEach(function(k){sum+=PG[+k].sum;names.push(PG[+k].label.replace("桌 ",""))});
  [].forEach.call(document.querySelectorAll("#pb2 [data-pg]"),function(b){b.disabled=ks.length>=2});
  $("pbar").innerHTML=ks.length>=2?'<div class="tot"><span>併單結帳：'+esc(names.join("＋"))+'</span><b>$'+sum+'</b></div><div class="pm">'+["現金","LINE PAY"].map(function(m){return'<button data-pj="'+m+'">'+m+" 一起收款</button>"}).join("")+"</div><p style=\"margin:6px 0 0;color:var(--mute);font-size:15px\">已選多桌，各桌單獨收款已停用；取消勾選即可恢復。</p>":""}
@@ -1408,7 +1485,7 @@ $("pay").onclick=function(e){var b=e.target.closest("button");if(!b){if(e.target
  else if(b.dataset.pj){var ks=Object.keys(PSel).filter(function(k){return PSel[k]}),items=[],names=[],sum=0;ks.forEach(function(k){var g=PG[+k];sum+=g.sum;names.push(g.label.replace("桌 ",""));g.orders.forEach(function(o){items.push({row:o.row,no:o.no})})});var jl=names.join("＋");if(b.dataset.pj==="現金"){openChange(items,sum,"併單 "+jl,jl);return}if(!confirm("併單結帳："+jl+"，合計 $"+sum+"，以「"+b.dataset.pj+"」一起收款？"))return;b.disabled=true;call("payOrders",[items,b.dataset.pj,jl],loadPay,function(m){alert(m);loadPay()})}
  else if(b.dataset.pg){var g=PG[+b.dataset.pg];if(b.dataset.m==="現金"){openChange(g.orders.map(function(o){return{row:o.row,no:o.no}}),g.sum,g.label,"");return}if(!confirm(g.label+" 合計 $"+g.sum+"，以「"+b.dataset.m+"」收款？"))return;b.disabled=true;call("payOrders",[g.orders.map(function(o){return{row:o.row,no:o.no}}),b.dataset.m],loadPay,function(m){alert(m);loadPay()})}};
 /* ---------- 桌號狀態 ---------- */
-var TLAB={dine:"已送出・未結帳",paid:"已結帳"};
+var TLAB={dine:"已送出・未結帳",paid:"已結帳",merged:"已併桌"};
 function curKey(){return mode==="外帶"?"外帶":table}
 function syncDraft(){if(!ordering)return;var k=curKey();if(Object.keys(cart).length)drafts[k]=cart;else delete drafts[k]}
 function dcount(k){var d=drafts[k],n=0;if(d)for(var x in d)n+=d[x].q;return n}
@@ -1422,8 +1499,22 @@ function drawMap(){$("tmap").innerHTML='<div class="tcan">'+TB.map(function(t){v
  if(st==="draft")c='<span class="tv">點餐中</span><small>已點 '+dcount(t.n)+" 項</small>";
  else if(st==="dine")c='<span class="nb">📄'+esc(s.no)+"</span><small>$"+s.sum+(s.mins>=1?" · "+s.mins+" 分":"")+"</small>";
  else if(st==="paid")c='<span class="nb"><em>$</em>'+esc(s.no)+"</span><small>已結帳</small>";
+ else if(st==="merged")c='<span class="tv">併入 '+esc(s.to)+"</span><small>請在 "+esc(s.to)+" 點餐</small>";
  else c='<span class="tp">＋</span>';
  return'<button class="tt s-'+st+(t.w<=11?" tn":"")+'" style="left:'+t.x+"%;top:"+t.y+"%;width:"+t.w+"%;height:"+t.h+'%" data-tt="'+esc(t.n)+'"><div class="tl"><b>'+esc(t.n)+"</b><i>👥"+((st!=="empty"&&TG[t.n])||0)+"/"+t.s+'</i></div><div class="tr">'+c+"</div></button>"}).join("")+'</div><div class="tside"><div class="pk">請選擇桌號<br>或按「外帶」<br><small>長按「用餐中」桌號拖到另一桌＝換桌／併桌<br>長按「已結帳」桌號拖到垃圾桶＝清空桌號</small></div>'+'<button class="tbtn" id="tTake">外帶'+(dcount("外帶")?"（點餐中）":"")+'</button><button class="tbtn" id="tPay">結帳</button><button class="tbtn tg2" id="tRef">重新整理</button><div class="tleg"><span><i></i>空桌</span><span><i style="background:#f08a00"></i>點餐中（未送出）</span><span><i style="background:#12946f"></i>已送出・未結帳</span><span><i style="background:#8fd3f4"></i>已結帳</span></div></div>';fitMap()}
+var DP=null,PPRE=null;
+function dropTable(from,to){var ts=tstate(to);
+ if(ts==="draft"){alert("桌 "+to+" 正在點餐中，請先送出或清除後再處理");return}
+ if(ts==="merged"){alert("桌 "+to+" 已併入 "+TS[to].to+"，請拖到 "+TS[to].to);return}
+ if(ts==="empty"){MV={from:from};confirmMove(to);$("ov").classList.add("show");loadMap(true);return}
+ DP={from:from,to:to};
+ if(ts==="paid"){$("dlg").innerHTML='<h3>換桌確認：'+esc(from)+' ⇄ '+esc(to)+'</h3><p style="font-size:20px;line-height:1.7">'+esc(from)+' 的客人（未結帳 <b>$'+TS[from].sum+'</b>）換到 <b>'+esc(to)+'</b>；<br>'+esc(to)+' 目前已結帳的客人換到 <b>'+esc(from)+'</b>。</p><div class="acts"><button class="ghost" id="back">取消</button><button class="go" data-dp="swap">確認換桌</button></div>'}
+ else{$("dlg").innerHTML='<h3>'+esc(from)+' 拖到 '+esc(to)+'，要怎麼處理？</h3><div class="dpl"><button data-dp="swap"><b>換桌</b><small>兩桌客人互換位置</small></button><button data-dp="merge"><b>併桌</b><small>'+esc(from)+' 併入 '+esc(to)+'，'+esc(from)+' 之後不能再點餐</small></button><button data-dp="pay"><b>併單結帳</b><small>兩桌各自用餐，只是一起結帳</small></button></div><div class="acts"><button class="ghost" id="back">取消</button></div>'}
+ $("ov").classList.add("show")}
+function dpRun(a){var d=DP;if(!d)return;
+ if(a==="pay"){closeOv();PPRE=[d.from,d.to];openPay("");return}
+ var fn=a==="swap"?"swapTables":"mergeTables";
+ call(fn,[d.from,d.to],function(){closeOv();loadMap(true);alert(a==="swap"?"已對調 "+d.from+" 和 "+d.to:d.from+" 已併入 "+d.to+"，之後請在 "+d.to+" 點餐")},function(m){alert(m);closeOv();loadMap(true)})}
 /* ---------- 長按桌號拖曳：用餐中→拖到另一桌＝換桌／併桌；已結帳→拖到下方垃圾桶＝清空桌號 ---------- */
 var TDRAG=null,tdT=null,tdSwallow=0;
 (function(){var m=$("tmap"),sx=0,sy=0,src="",kind="",gh=null,dz=null,pid=0,el=null;
@@ -1441,14 +1532,14 @@ var TDRAG=null,tdT=null,tdSwallow=0;
   clr();var t=tgtAt(e.clientX,e.clientY);if(t&&tstate(t.dataset.tt)!=="draft")t.classList.add("dtg")});
  function end(e){clearTimeout(tdT);if(!TDRAG)return;var from=TDRAG,kd=kind,up=e.type==="pointerup",t=(up&&kd==="dine")?tgtAt(e.clientX,e.clientY):null,onDz=up&&kd==="paid"&&atDz(e.clientX,e.clientY);stop();TDRAG=null;tdSwallow=Date.now();
   if(onDz){askClear(from);return}
-  if(!t)return;var to=t.dataset.tt;if(tstate(to)==="draft"){alert("桌 "+to+" 正在點餐中，請先送出或清除後再換桌");return}
-  MV={from:from};confirmMove(to);$("ov").classList.add("show");loadMap(true)}
+  if(!t)return;dropTable(from,t.dataset.tt)}
  m.addEventListener("pointerup",end);m.addEventListener("pointercancel",end);
  m.addEventListener("contextmenu",function(e){if(e.target.closest&&e.target.closest(".tt"))e.preventDefault()})})();
 var _loadMap=loadMap;loadMap=function(a){if(TDRAG)return;_loadMap(a)};
 function fitMap(){var m=$("tmap"),c=m.querySelector(".tcan"),sd=m.querySelector(".tside");if(!c||!sd)return;var col=getComputedStyle(m).flexDirection==="column",W=m.clientWidth-24-(col?0:sd.offsetWidth+12),H=m.clientHeight-24-(col?sd.offsetHeight+12:0),w=Math.max(200,Math.min(W,H*1.6));c.style.flex="none";c.style.width=w+"px";c.style.height=(w/1.6)+"px"}
 window.addEventListener("resize",function(){if(document.body.dataset.v==="map")fitMap()});
 function tapTable(n){var st=tstate(n),s=TS[n];if(st==="draft"){startOrder(n);return}if(st==="empty"){askGuests(n,true);return}
+ if(st==="merged"){$("dlg").innerHTML='<h3>桌 '+esc(n)+' 已併入 '+esc(s.to)+'</h3><p style="font-size:20px;line-height:1.6">這桌的客人和 <b>'+esc(s.to)+'</b> 併成一桌，不能在這桌點餐。<br>請到 <b>'+esc(s.to)+'</b> 點餐、加點或結帳。</p><div class="acts"><button class="ghost" id="back">取消</button><button class="ghost" data-tp="unmerge" data-tn="'+esc(n)+'">解除併桌</button><button class="go" data-tp="goto" data-tn="'+esc(s.to)+'">前往 '+esc(s.to)+'</button></div>';$("ov").classList.add("show");return}
  $("dlg").innerHTML='<h3>桌 '+esc(n)+" · "+TLAB[st]+"</h3>"+(st==="dine"?'<p style="font-size:22px">單 '+esc(s.no)+"，未結帳 "+s.n+' 張，合計 <b>$'+s.sum+"</b>"+(TG[n]?"（👥 "+TG[n]+" 人）":"")+"</p>":'<p style="font-size:19px;line-height:1.6">這桌已結帳。<br><b>加點</b>：原本的客人繼續點　<b>開新單點餐</b>：新客人入座<br><b>清空桌號</b>：桌子恢復成空桌</p>')+'<div class="acts"><button class="ghost" id="back">取消</button>'+(st==="dine"?'<button class="ghost" data-tp="pay" data-tn="'+esc(n)+'">結帳</button><button class="ghost" data-tp="guests" data-tn="'+esc(n)+'">更改人數</button><button class="ghost" data-tp="move" data-tn="'+esc(n)+'">換桌</button>':"")+(st==="dine"?'<button class="go" data-tp="add" data-tn="'+esc(n)+'">加點</button>':'<button class="go b3 b-grn" data-tp="add" data-tn="'+esc(n)+'">加點</button><button class="go b3 b-org" data-tp="new" data-tn="'+esc(n)+'">開新單點餐</button><button class="go b3 b-gry" data-tp="clear" data-tn="'+esc(n)+'">清空桌號</button>')+"</div>";$("ov").classList.add("show")}
 $("tmap").onclick=function(e){if(Date.now()-tdSwallow<600)return;var b=e.target.closest("button");if(!b)return;if(b.dataset.tt)tapTable(b.dataset.tt);else if(b.id==="tTake")startOrder(null);else if(b.id==="tPay")openPay("");else if(b.id==="tRef")loadMap()};
 $("chips").onclick=function(e){var b=e.target.closest("button");if(!b)return;var k=b.dataset.ch;if(k==="外帶")startOrder(null);else if(tstate(k)==="empty"&&!(ordering&&curKey()===k))askGuests(k,true);else startOrder(k)};
