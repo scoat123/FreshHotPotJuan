@@ -1,5 +1,5 @@
 /* 鮮味愛喝湯 離線快取：先用快取、背景更新；安裝新版時略過瀏覽器快取，確保拿到最新檔案 */
-var CACHE = 'freshpot-v29';
+var CACHE = 'freshpot-v30';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return Promise.all(FILES.map(function (u) { return fetch(new Request(u, { cache: 'reload' })).then(function (r) { if (!r.ok) throw new Error(u); return c.put(u, r); }); })); }).then(function () { return self.skipWaiting(); }));

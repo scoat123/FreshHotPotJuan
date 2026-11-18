@@ -273,7 +273,8 @@ body[data-v="kitchen"] #kitchen.sv{display:flex;flex-direction:column;overflow:h
 body[data-v="map"] #tmap{display:flex}
 .tcan{position:relative;flex:1;min-width:0;background:var(--surf);border-radius:16px;border:2px solid var(--line)}
 .tt{position:absolute;border-radius:10px;background:#dcdcdc;color:#2a1a17;border:2px solid #b8b8b8;text-align:left;padding:6px 10px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.25)}
-.tt{touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.tt.dsrc{opacity:.4}.tt.dtg{outline:5px solid #ffd52e;box-shadow:0 0 0 9px rgba(255,213,46,.55);z-index:5}.tdg{position:fixed;z-index:80;pointer-events:none;transform:translate(-50%,-130%);background:#c4161c;color:#fff;border-radius:14px;padding:10px 18px;font-size:24px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.tt{touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.tt.dsrc{opacity:.4}.tt.dtg{outline:5px solid #ffd52e;box-shadow:0 0 0 9px rgba(255,213,46,.55);z-index:5}#tdz{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:75;background:#6b6b6b;color:#fff;border:4px dashed #fff;border-radius:18px;padding:18px 34px;font-size:24px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.5)}#tdz.on{background:#c4161c;transform:translateX(-50%) scale(1.08)}
+.tdg{position:fixed;z-index:80;pointer-events:none;transform:translate(-50%,-130%);background:#c4161c;color:#fff;border-radius:14px;padding:10px 18px;font-size:24px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .tt.tn{flex-direction:column;align-items:flex-start;justify-content:space-between}
 .tl{display:flex;flex-direction:column;min-width:0;white-space:nowrap}
 .tr{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
@@ -1173,8 +1174,8 @@ function setV(v){document.body.dataset.v=v;drawTabs()}
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v29</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
-function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v29 · 快取 "+k.sort().pop()}).catch(function(){})}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v30</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
+function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v30 · 快取 "+k.sort().pop()}).catch(function(){})}
 var SYS={st:"loading",pending:0};
 function drawSync(){var t=SYS.st,x=SYS.pending,tx,cl;
  if(t==="ok"){tx=x?"☁ 上傳中 "+x:"☁ 已同步";cl="ok"}else if(t==="offline"){tx=x?"☁ 離線中（待上傳 "+x+"）":"☁ 離線中（連線後自動同步）";cl="wait"}else if(t==="nologin"){tx="☁ 未登入雲端";cl="bad"}else if(t==="error"){tx="☁ 同步異常";cl="bad"}else{tx="☁ 連線中…";cl="wait"}
@@ -1422,18 +1423,24 @@ function drawMap(){$("tmap").innerHTML='<div class="tcan">'+TB.map(function(t){v
  else if(st==="dine")c='<span class="nb">📄'+esc(s.no)+"</span><small>$"+s.sum+(s.mins>=1?" · "+s.mins+" 分":"")+"</small>";
  else if(st==="paid")c='<span class="nb"><em>$</em>'+esc(s.no)+"</span><small>已結帳</small>";
  else c='<span class="tp">＋</span>';
- return'<button class="tt s-'+st+(t.w<=11?" tn":"")+'" style="left:'+t.x+"%;top:"+t.y+"%;width:"+t.w+"%;height:"+t.h+'%" data-tt="'+esc(t.n)+'"><div class="tl"><b>'+esc(t.n)+"</b><i>👥"+((st!=="empty"&&TG[t.n])||0)+"/"+t.s+'</i></div><div class="tr">'+c+"</div></button>"}).join("")+'</div><div class="tside"><div class="pk">請選擇桌號<br>或按「外帶」<br><small>長按「用餐中」的桌號拖到另一桌＝換桌／併桌</small></div>'+'<button class="tbtn" id="tTake">外帶'+(dcount("外帶")?"（點餐中）":"")+'</button><button class="tbtn" id="tPay">結帳</button><button class="tbtn tg2" id="tRef">重新整理</button><div class="tleg"><span><i></i>空桌</span><span><i style="background:#f08a00"></i>點餐中（未送出）</span><span><i style="background:#12946f"></i>已送出・未結帳</span><span><i style="background:#8fd3f4"></i>已結帳</span></div></div>';fitMap()}
-/* ---------- 長按桌號拖到另一桌：換桌／併桌 ---------- */
+ return'<button class="tt s-'+st+(t.w<=11?" tn":"")+'" style="left:'+t.x+"%;top:"+t.y+"%;width:"+t.w+"%;height:"+t.h+'%" data-tt="'+esc(t.n)+'"><div class="tl"><b>'+esc(t.n)+"</b><i>👥"+((st!=="empty"&&TG[t.n])||0)+"/"+t.s+'</i></div><div class="tr">'+c+"</div></button>"}).join("")+'</div><div class="tside"><div class="pk">請選擇桌號<br>或按「外帶」<br><small>長按「用餐中」桌號拖到另一桌＝換桌／併桌<br>長按「已結帳」桌號拖到垃圾桶＝清空桌號</small></div>'+'<button class="tbtn" id="tTake">外帶'+(dcount("外帶")?"（點餐中）":"")+'</button><button class="tbtn" id="tPay">結帳</button><button class="tbtn tg2" id="tRef">重新整理</button><div class="tleg"><span><i></i>空桌</span><span><i style="background:#f08a00"></i>點餐中（未送出）</span><span><i style="background:#12946f"></i>已送出・未結帳</span><span><i style="background:#8fd3f4"></i>已結帳</span></div></div>';fitMap()}
+/* ---------- 長按桌號拖曳：用餐中→拖到另一桌＝換桌／併桌；已結帳→拖到下方垃圾桶＝清空桌號 ---------- */
 var TDRAG=null,tdT=null,tdSwallow=0;
-(function(){var m=$("tmap"),sx=0,sy=0,src="",gh=null,pid=0,el=null;
+(function(){var m=$("tmap"),sx=0,sy=0,src="",kind="",gh=null,dz=null,pid=0,el=null;
+ function atDz(x,y){var e=document.elementFromPoint(x,y);return!!(e&&e.closest&&e.closest("#tdz"))}
  function tgtAt(x,y){var e=document.elementFromPoint(x,y),b=e&&e.closest&&e.closest(".tt");return b&&b.dataset.tt!==src?b:null}
  function clr(){[].forEach.call(m.querySelectorAll(".tt.dtg"),function(b){b.classList.remove("dtg")})}
- function stop(){clearTimeout(tdT);if(gh){gh.remove();gh=null}clr();[].forEach.call(m.querySelectorAll(".tt.dsrc"),function(b){b.classList.remove("dsrc")});if(el&&el.releasePointerCapture){try{el.releasePointerCapture(pid)}catch(x){}}el=null}
- m.addEventListener("pointerdown",function(e){if(e.button>0||TDRAG)return;var b=e.target.closest&&e.target.closest(".tt");if(!b)return;var n=b.dataset.tt;if(tstate(n)!=="dine")return;sx=e.clientX;sy=e.clientY;pid=e.pointerId;clearTimeout(tdT);
-  tdT=setTimeout(function(){if(!document.body.contains(b)||tstate(n)!=="dine")return;TDRAG=n;src=n;el=b;try{b.setPointerCapture(pid)}catch(x){}b.classList.add("dsrc");gh=document.createElement("div");gh.className="tdg";gh.textContent="桌 "+n+" ➜";gh.style.left=sx+"px";gh.style.top=sy+"px";document.body.appendChild(gh);if(navigator.vibrate)navigator.vibrate(30)},380)});
+ function stop(){clearTimeout(tdT);if(gh){gh.remove();gh=null}if(dz){dz.remove();dz=null}clr();[].forEach.call(m.querySelectorAll(".tt.dsrc"),function(b){b.classList.remove("dsrc")});if(el&&el.releasePointerCapture){try{el.releasePointerCapture(pid)}catch(x){}}el=null}
+ m.addEventListener("pointerdown",function(e){if(e.button>0||TDRAG)return;var b=e.target.closest&&e.target.closest(".tt");if(!b)return;var n=b.dataset.tt,k0=tstate(n);if(k0!=="dine"&&k0!=="paid")return;sx=e.clientX;sy=e.clientY;pid=e.pointerId;clearTimeout(tdT);
+  tdT=setTimeout(function(){if(!document.body.contains(b)||tstate(n)!==k0)return;TDRAG=n;src=n;kind=k0;el=b;try{b.setPointerCapture(pid)}catch(x){}b.classList.add("dsrc");gh=document.createElement("div");gh.className="tdg";gh.textContent=k0==="paid"?"桌 "+n+" 🗑":"桌 "+n+" ➜";gh.style.left=sx+"px";gh.style.top=sy+"px";document.body.appendChild(gh);
+   if(k0==="paid"){dz=document.createElement("div");dz.id="tdz";dz.innerHTML="🗑 拖到這裡放開＝清空桌號";document.body.appendChild(dz)}
+   if(navigator.vibrate)navigator.vibrate(30)},380)});
  m.addEventListener("pointermove",function(e){if(!TDRAG){if(Math.hypot(e.clientX-sx,e.clientY-sy)>12)clearTimeout(tdT);return}
-  e.preventDefault();if(gh){gh.style.left=e.clientX+"px";gh.style.top=e.clientY+"px"}clr();var t=tgtAt(e.clientX,e.clientY);if(t&&tstate(t.dataset.tt)!=="draft")t.classList.add("dtg")});
- function end(e){clearTimeout(tdT);if(!TDRAG)return;var from=TDRAG,t=e.type==="pointerup"?tgtAt(e.clientX,e.clientY):null;stop();TDRAG=null;tdSwallow=Date.now();
+  e.preventDefault();if(gh){gh.style.left=e.clientX+"px";gh.style.top=e.clientY+"px"}
+  if(kind==="paid"){if(dz)dz.classList.toggle("on",atDz(e.clientX,e.clientY));return}
+  clr();var t=tgtAt(e.clientX,e.clientY);if(t&&tstate(t.dataset.tt)!=="draft")t.classList.add("dtg")});
+ function end(e){clearTimeout(tdT);if(!TDRAG)return;var from=TDRAG,kd=kind,up=e.type==="pointerup",t=(up&&kd==="dine")?tgtAt(e.clientX,e.clientY):null,onDz=up&&kd==="paid"&&atDz(e.clientX,e.clientY);stop();TDRAG=null;tdSwallow=Date.now();
+  if(onDz){askClear(from);return}
   if(!t)return;var to=t.dataset.tt;if(tstate(to)==="draft"){alert("桌 "+to+" 正在點餐中，請先送出或清除後再換桌");return}
   MV={from:from};confirmMove(to);$("ov").classList.add("show");loadMap(true)}
  m.addEventListener("pointerup",end);m.addEventListener("pointercancel",end);
