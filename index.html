@@ -843,9 +843,9 @@ function mergeTables(token, from, to) {
   var x = auth_(token); if (x.err) return x;
   from = String(from || '').trim(); to = String(to || '').trim();
   var e = tableOk_(from, to); if (e) return { err: e };
-  var rf = activeRows_(from), rt = activeRows_(to).filter(function (i) { return DB.orders[i][9] !== '已收款'; });
+  var rf = activeRows_(from), rt = activeRows_(to);
   if (!rf.length) return { err: from + ' 目前沒有訂單可併' };
-  if (!rt.length) return { err: to + ' 目前沒有用餐中的訂單，請改用「換桌」' };
+  if (!rt.length) return { err: to + ' 目前沒有客人，請改用「換桌」' };
   var o = DB.orders;
   rf.forEach(function (i) { o[i][3] = to; if (!String(o[i][14] || '')) o[i][14] = from; });
   var g = DB.conf.guests || {};
@@ -1251,8 +1251,8 @@ function setV(v){document.body.dataset.v=v;drawTabs()}
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v31</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
-function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v31 · 快取 "+k.sort().pop()}).catch(function(){})}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v32</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
+function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v32 · 快取 "+k.sort().pop()}).catch(function(){})}
 var SYS={st:"loading",pending:0};
 function drawSync(){var t=SYS.st,x=SYS.pending,tx,cl;
  if(t==="ok"){tx=x?"☁ 上傳中 "+x:"☁ 已同步";cl="ok"}else if(t==="offline"){tx=x?"☁ 離線中（待上傳 "+x+"）":"☁ 離線中（連線後自動同步）";cl="wait"}else if(t==="nologin"){tx="☁ 未登入雲端";cl="bad"}else if(t==="error"){tx="☁ 同步異常";cl="bad"}else{tx="☁ 連線中…";cl="wait"}
@@ -1508,7 +1508,7 @@ function dropTable(from,to){var ts=tstate(to);
  if(ts==="merged"){alert("桌 "+to+" 已併入 "+TS[to].to+"，請拖到 "+TS[to].to);return}
  if(ts==="empty"){MV={from:from};confirmMove(to);$("ov").classList.add("show");loadMap(true);return}
  DP={from:from,to:to};
- if(ts==="paid"){$("dlg").innerHTML='<h3>換桌確認：'+esc(from)+' ⇄ '+esc(to)+'</h3><p style="font-size:20px;line-height:1.7">'+esc(from)+' 的客人（未結帳 <b>$'+TS[from].sum+'</b>）換到 <b>'+esc(to)+'</b>；<br>'+esc(to)+' 目前已結帳的客人換到 <b>'+esc(from)+'</b>。</p><div class="acts"><button class="ghost" id="back">取消</button><button class="go" data-dp="swap">確認換桌</button></div>'}
+ if(ts==="paid"){$("dlg").innerHTML='<h3>'+esc(from)+' 拖到 '+esc(to)+'（已結帳），要怎麼處理？</h3><div class="dpl"><button data-dp="swap"><b>換桌</b><small>'+esc(from)+' 的客人換到 '+esc(to)+'；'+esc(to)+' 已結帳的客人換到 '+esc(from)+'</small></button><button data-dp="merge"><b>併桌</b><small>'+esc(from)+' 併入 '+esc(to)+'（'+esc(from)+' 之後不能再點餐），'+esc(to)+' 已付的單保留，只剩 '+esc(from)+' 的單待結帳</small></button></div><p style="margin:4px 0 0;color:var(--mute);font-size:15px">'+esc(to)+' 已結帳，所以沒有「併單結帳」。</p><div class="acts"><button class="ghost" id="back">取消</button></div>'}
  else{$("dlg").innerHTML='<h3>'+esc(from)+' 拖到 '+esc(to)+'，要怎麼處理？</h3><div class="dpl"><button data-dp="swap"><b>換桌</b><small>兩桌客人互換位置</small></button><button data-dp="merge"><b>併桌</b><small>'+esc(from)+' 併入 '+esc(to)+'，'+esc(from)+' 之後不能再點餐</small></button><button data-dp="pay"><b>併單結帳</b><small>兩桌各自用餐，只是一起結帳</small></button></div><div class="acts"><button class="ghost" id="back">取消</button></div>'}
  $("ov").classList.add("show")}
 function dpRun(a){var d=DP;if(!d)return;
