@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="format-detection" content="telephone=no">
-<title>鮮味愛喝湯 雲端測試版</title>
+<title>鮮味愛喝湯 點餐系統</title>
 <style>
 :root{--bg:#f6efe6;--surf:#fff;--ink:#2a1a17;--mute:#7a6a65;--red:#c4161c;--red-d:#9d1015;--yel:#ffd52e;--line:#e6d9cc;--on-red:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1412;--surf:#2a1d1a;--ink:#f6e9e2;--mute:#b3a199;--red:#e0343a;--red-d:#c4161c;--line:#46342f}}
@@ -372,7 +372,7 @@ window.FB_CONFIG={apiKey:"AIzaSyDbhOMpE_vDZtgVrmAn3EOgIstI4MRhzPY",authDomain:"f
 window.FB_EMAIL="scoat123@gmail.com";
 </script>
 <script>
-/* 鮮味愛喝湯 點餐系統 — （取代 Google Apps Script）
+/* 鮮味愛喝湯 點餐系統 — 離線後端（取代 Google Apps Script）
  * 所有資料存在這台裝置的 IndexedDB（不可用時退回 localStorage）。
  * 介面與原本的 Code.gs 完全相同：OFF.run(fn, args) → Promise<結果>。 */
 (function (root) {
@@ -678,7 +678,7 @@ function getTabs(token) {
 }
 function payOrders(token, items, method, joint) {
   var a = auth_(token); if (a.err) return a;
-  if (['現金', '行動支付', '信用卡', '其他'].indexOf(method) < 0) return { err: '付款方式錯誤' };
+  if (['現金', 'LINE PAY', '行動支付', '信用卡', '其他'].indexOf(method) < 0) return { err: '付款方式錯誤' };
   items = (items || []).slice(0, 100); joint = joint ? clean_(String(joint).slice(0, 60)) : '';
   var now = fmt(new Date()), c = 0;
   items.forEach(function (x) {
@@ -834,7 +834,7 @@ function closeShift(token, date, shift, from, to, counted, note) {
   if (cnt !== '' && !(cnt >= 0 && cnt <= 99999999)) return { err: '實點現金金額錯誤' };
   var diff = cnt === '' ? '' : cnt - cash;
   DB.closes.push([fmt(new Date()), String(date).slice(0, 10), shift, from, to, st.count, st.sum, cash,
-    (by['行動支付'] || { s: 0 }).s, (by['信用卡'] || { s: 0 }).s, (by['其他'] || { s: 0 }).s, st.unpaid.s, cnt, diff, clean_(note)]);
+    (by['LINE PAY'] || { s: 0 }).s + (by['行動支付'] || { s: 0 }).s, (by['信用卡'] || { s: 0 }).s, (by['其他'] || { s: 0 }).s, st.unpaid.s, cnt, diff, clean_(note)]);
   return { ok: true, diff: diff };
 }
 function listCloses(token) {
@@ -1172,8 +1172,8 @@ function setV(v){document.body.dataset.v=v;drawTabs()}
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:4px 0 0">雲端測試版 b2</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
-function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="雲端測試版 b2 · 快取 "+k.sort().pop()}).catch(function(){})}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v28</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
+function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v28 · 快取 "+k.sort().pop()}).catch(function(){})}
 var SYS={st:"loading",pending:0};
 function drawSync(){var t=SYS.st,x=SYS.pending,tx,cl;
  if(t==="ok"){tx=x?"☁ 上傳中 "+x:"☁ 已同步";cl="ok"}else if(t==="offline"){tx=x?"☁ 離線中（待上傳 "+x+"）":"☁ 離線中（連線後自動同步）";cl="wait"}else if(t==="nologin"){tx="☁ 未登入雲端";cl="bad"}else if(t==="error"){tx="☁ 同步異常";cl="bad"}else{tx="☁ 連線中…";cl="wait"}
@@ -1297,7 +1297,7 @@ function tReport(){call("getSettings",[],function(st){SPL=/^\d{2}:\d{2}$/.test(s
 function rQuery(from,to,shift,key){RP={from:from,to:to,shift:shift,date:$("rdate").value||ymd(new Date())};$("rf").value=from.replace(" ","T");$("rt").value=to.replace(" ","T");$("rbody").innerHTML='<div class="empty">計算中…</div>';[].forEach.call(document.querySelectorAll("[data-rp]"),function(x){x.classList.toggle("on",x.dataset.rp===key)});
  call("getReport2",[from,to],rRender,function(m){$("rbody").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
 function rRender(d){RD=d;var by=d.rec.by,mx=d.top.length?d.top[0].q:1,dm=Math.max.apply(null,d.days.map(function(x){return x.s}).concat([1]));
- $("rbody").innerHTML='<h3>'+esc(d.from)+" ～ "+esc(d.to)+'</h3><div class="stats"><div>訂單數<b>'+d.count+'</b></div><div>營業額（下單）<b>$'+d.sum+'</b></div><div>平均客單<b>$'+d.avg+'</b></div></div><div class="stats"><div>實際收款（收款時間）<b>$'+d.rec.total+'</b>'+d.rec.c+' 筆</div>'+["現金","行動支付","信用卡","其他"].map(function(k){return"<div>"+k+"<b>$"+((by[k]||{s:0}).s)+"</b>"+((by[k]||{c:0}).c)+" 筆</div>"}).join("")+'</div><div class="stats"><div>內用<b>'+d.dine.c+' 筆</b>$'+d.dine.s+'</div><div>外帶<b>'+d.take.c+' 筆</b>$'+d.take.s+'</div><div>未收款<b>$'+d.unpaid.s+'</b>'+d.unpaid.c+' 張</div><div>作廢<b>'+d.cancel.c+' 張</b>$'+d.cancel.s+'</div></div>'+(RP.shift?'<div class="ah"><button class="pri" data-cl="'+RP.shift+'">'+(RP.shift==="全日"?"日結（記錄日報）":"結"+RP.shift+"小帳")+'</button></div>':"")
+ $("rbody").innerHTML='<h3>'+esc(d.from)+" ～ "+esc(d.to)+'</h3><div class="stats"><div>訂單數<b>'+d.count+'</b></div><div>營業額（下單）<b>$'+d.sum+'</b></div><div>平均客單<b>$'+d.avg+'</b></div></div><div class="stats"><div>實際收款（收款時間）<b>$'+d.rec.total+'</b>'+d.rec.c+' 筆</div>'+["現金","LINE PAY"].concat(["行動支付","信用卡"].filter(function(k){return(by[k]||{c:0}).c})).concat(["其他"]).map(function(k){return"<div>"+k+"<b>$"+((by[k]||{s:0}).s)+"</b>"+((by[k]||{c:0}).c)+" 筆</div>"}).join("")+'</div><div class="stats"><div>內用<b>'+d.dine.c+' 筆</b>$'+d.dine.s+'</div><div>外帶<b>'+d.take.c+' 筆</b>$'+d.take.s+'</div><div>未收款<b>$'+d.unpaid.s+'</b>'+d.unpaid.c+' 張</div><div>作廢<b>'+d.cancel.c+' 張</b>$'+d.cancel.s+'</div></div>'+(RP.shift?'<div class="ah"><button class="pri" data-cl="'+RP.shift+'">'+(RP.shift==="全日"?"日結（記錄日報）":"結"+RP.shift+"小帳")+'</button></div>':"")
  +"<h3>熱銷品項</h3>"+(d.top.length?'<table class="tb"><tr><th>品項</th><th></th><th>數量</th><th>金額</th></tr>'+d.top.map(function(x){return"<tr><td>"+esc(x.n)+'</td><td style="width:30%"><div class="bar" style="width:'+Math.round(x.q/mx*100)+'%"></div></td><td>'+x.q+"</td><td>$"+x.s+"</td></tr>"}).join("")+"</table>":'<div class="empty">這段時間沒有品項明細</div>')
  +(d.days.length>1?"<h3>逐日營業額</h3><table class=\"tb\">"+d.days.map(function(x){return"<tr><td>"+x.d.slice(5)+'</td><td style="width:50%"><div class="bar" style="width:'+Math.round(x.s/dm*100)+'%"></div></td><td>'+x.c+" 筆</td><td>$"+x.s+"</td></tr>"}).join("")+"</table>":"")}
 function loadCloses(){call("listCloses",[],function(l){$("rclose").innerHTML=l.length?'<table class="tb"><tr><th>結班時間</th><th>時段</th><th>營業額</th><th>現金（系統／實點）</th><th>差額</th></tr>'+l.map(function(x){var c=x.counted===""||x.counted==null;return"<tr><td>"+esc(x.at)+"<br><small>"+esc(x.date)+"</small></td><td>"+esc(x.shift)+"</td><td>$"+x.sum+"</td><td>$"+x.cash+" / "+(c?"—":"$"+x.counted)+"</td><td>"+(c?"—":(x.diff>0?"+":"")+x.diff)+"</td></tr>"}).join("")+"</table>":'<div class="empty">尚無結班紀錄</div>'},function(m){$("rclose").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
@@ -1375,19 +1375,19 @@ $("dlg").oninput=function(e){if(e.target.id==="xp"||e.target.id==="cc")e.target.
 $("zoom").onclick=function(e){var b=e.target.closest("button[data-v]");if(b){var v=zi.v[+b.dataset.v];add(zi.id,zi.n,v.l,v.p,1);$("zoom").classList.remove("show");return}if(e.target===$("zoom")||e.target.closest("#zx"))$("zoom").classList.remove("show")};
 var PSel={},PG=[],PM="after",PF="",TB=[],TS={},TG={},gAsk=null;
 function openPay(f){PF=f||"";$("pay").innerHTML='<div class="dlg pdlg"><div class="ah"><h3 style="margin:0">結帳</h3><span class="tag" id="pmt"></span><span class="sp"></span><button class="ghost" id="pr">重新整理</button><button class="ghost" id="px">關閉</button></div><div id="pb2"><div class="empty">載入中…</div></div><div id="pbar"></div></div>';$("pay").classList.add("show");loadPay()}
-function loadPay(){call("getTabs",[],function(d){PSel={};PG=d.groups.filter(function(g){return!PF||g.label==="桌 "+PF});PM=d.payMode;pbarDraw();$("pmt").textContent=PM==="before"?"餐前結帳":"餐後結帳";$("pb2").innerHTML=PG.length?(PG.length>1&&!PF?'<p class="hint" style="margin:0 0 4px;color:var(--mute);font-size:15px">勾選兩桌以上的「併單結帳」，可一次合併收款。</p>':"")+PG.map(function(g,gi){return'<div class="pg"><h4>'+esc(g.label)+(PF?"":'<label class="ck"><input type="checkbox" data-pc="'+gi+'">併單結帳</label>')+(PM==="after"&&g.orders.some(function(o){return o.status!=="已送達"})?' <span class="tag">尚有餐點未送達</span>':"")+'</h4>'+g.orders.map(function(o){return'<div class="oh" style="font-weight:500"><span>#'+esc(o.no)+" "+esc(o.time)+' <span class="tag">'+esc(o.status)+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+(o.from?' <span class="tag">原 '+esc(o.from)+"</span>":"")+'</span><span>$'+o.total+'</span></div><p style="margin:2px 0 8px;color:var(--mute);font-size:15px">'+esc(o.items)+"</p>"}).join("")+'<div class="tot"><span>合計</span><b>$'+g.sum+'</b></div><div class="pm">'+["現金","行動支付","信用卡"].map(function(m){return'<button data-pg="'+gi+'" data-m="'+m+'">'+m+" 收款</button>"}).join("")+"</div></div>"}).join(""):'<div class="empty">沒有未結帳的訂單</div>'},function(m){$("pb2").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
+function loadPay(){call("getTabs",[],function(d){PSel={};PG=d.groups.filter(function(g){return!PF||g.label==="桌 "+PF});PM=d.payMode;pbarDraw();$("pmt").textContent=PM==="before"?"餐前結帳":"餐後結帳";$("pb2").innerHTML=PG.length?(PG.length>1&&!PF?'<p class="hint" style="margin:0 0 4px;color:var(--mute);font-size:15px">勾選兩桌以上的「併單結帳」，可一次合併收款。</p>':"")+PG.map(function(g,gi){return'<div class="pg"><h4>'+esc(g.label)+(PF?"":'<label class="ck"><input type="checkbox" data-pc="'+gi+'">併單結帳</label>')+(PM==="after"&&g.orders.some(function(o){return o.status!=="已送達"})?' <span class="tag">尚有餐點未送達</span>':"")+'</h4>'+g.orders.map(function(o){return'<div class="oh" style="font-weight:500"><span>#'+esc(o.no)+" "+esc(o.time)+' <span class="tag">'+esc(o.status)+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+(o.from?' <span class="tag">原 '+esc(o.from)+"</span>":"")+'</span><span>$'+o.total+'</span></div><p style="margin:2px 0 8px;color:var(--mute);font-size:15px">'+esc(o.items)+"</p>"}).join("")+'<div class="tot"><span>合計</span><b>$'+g.sum+'</b></div><div class="pm">'+["現金","LINE PAY"].map(function(m){return'<button data-pg="'+gi+'" data-m="'+m+'">'+m+" 收款</button>"}).join("")+"</div></div>"}).join(""):'<div class="empty">沒有未結帳的訂單</div>'},function(m){$("pb2").innerHTML='<div class="empty">'+esc(m)+"</div>"})}
 function pbarDraw(){var ks=Object.keys(PSel).filter(function(k){return PSel[k]}),sum=0,names=[];ks.forEach(function(k){sum+=PG[+k].sum;names.push(PG[+k].label.replace("桌 ",""))});
  [].forEach.call(document.querySelectorAll("#pb2 [data-pg]"),function(b){b.disabled=ks.length>=2});
- $("pbar").innerHTML=ks.length>=2?'<div class="tot"><span>併單結帳：'+esc(names.join("＋"))+'</span><b>$'+sum+'</b></div><div class="pm">'+["現金","行動支付","信用卡"].map(function(m){return'<button data-pj="'+m+'">'+m+" 一起收款</button>"}).join("")+"</div><p style=\"margin:6px 0 0;color:var(--mute);font-size:15px\">已選多桌，各桌單獨收款已停用；取消勾選即可恢復。</p>":""}
+ $("pbar").innerHTML=ks.length>=2?'<div class="tot"><span>併單結帳：'+esc(names.join("＋"))+'</span><b>$'+sum+'</b></div><div class="pm">'+["現金","LINE PAY"].map(function(m){return'<button data-pj="'+m+'">'+m+" 一起收款</button>"}).join("")+"</div><p style=\"margin:6px 0 0;color:var(--mute);font-size:15px\">已選多桌，各桌單獨收款已停用；取消勾選即可恢復。</p>":""}
 /* ---------- 現金收款・找零 ---------- */
 var CHG=null;
 function openChange(items,sum,label,joint){CHG={items:items,sum:sum,label:label,joint:joint||"",rec:0,free:false,fresh:true,done:false,busy:false};drawChange();$("chg").classList.add("show")}
-function drawChange(){var c=CHG,diff=c.rec-c.sum,ok=c.rec>=c.sum&&c.rec>0,h;
+function drawChange(){var c=CHG,diff=c.rec-c.sum,none=!c.rec,ok=c.rec>=c.sum&&c.rec>0,h;
  if(c.done){h='<div class="dlg cdlg cdone"><div class="tk2">✔</div><h3>'+esc(c.label)+' 已收款（現金）</h3><div class="cr"><span>應收</span><b>$'+c.sum+'</b></div><div class="cr"><span>收取</span><b>$'+c.rec+'</b></div><div class="cr big ok"><span>請找零</span><b>$'+(c.rec-c.sum)+'</b></div><div class="acts"><button class="go" data-ch="fin">完成</button></div></div>'}
- else{h='<div class="dlg cdlg"><h3>現金收款 · '+esc(c.label)+'</h3><div class="cr"><span>應收</span><b>$'+c.sum+'</b></div><div class="cr"><span>收取</span><b class="'+(c.rec?"":"mute")+'">$'+c.rec+'</b></div><div class="cr big '+(ok?"ok":"short")+'"><span>'+(ok?"找零":"還差")+'</span><b>$'+Math.abs(diff)+'</b></div>'
+ else{h='<div class="dlg cdlg"><h3>現金收款 · '+esc(c.label)+'</h3><div class="cr"><span>應收</span><b>$'+c.sum+'</b></div><div class="cr"><span>收取</span><b class="'+(c.rec?"":"mute")+'">$'+c.rec+'</b></div><div class="cr big '+(ok||none?"ok":"short")+'"><span>'+(ok||none?"找零":"還差")+'</span><b>$'+(none?0:Math.abs(diff))+'</b></div>'
   +'<div class="cbtn"><button data-add="1000">1000</button><button data-add="500">500</button><button data-add="100">100</button><button class="cw'+(c.free?" on":"")+'" data-ch="free">自由輸入</button><button class="cs" data-ch="clear">清除</button></div>'
   +(c.free?'<div class="cpad">'+["1","2","3","4","5","6","7","8","9","0","00","⌫"].map(function(k){return'<button data-dg="'+k+'">'+k+"</button>"}).join("")+"</div>":"")
-  +'<div class="acts"><button class="ghost" data-ch="cancel">取消</button><button class="go" data-ch="ok"'+(ok&&!c.busy?"":" disabled")+'>確認收款'+(ok?" · 找零 $"+diff:"")+"</button></div></div>"}
+  +'<div class="acts"><button class="ghost" data-ch="cancel">取消</button><button class="go" data-ch="ok"'+(c.busy?" disabled":"")+'>確認收款'+(none?"（不找零）":(ok?" · 找零 $"+diff:""))+"</button></div></div>"}
  $("chg").innerHTML=h}
 $("chg").onclick=function(e){var b=e.target.closest("button");if(!b||!CHG)return;var c=CHG;if(c.busy)return;
  if(b.dataset.add){c.rec=Math.min(9999999,c.rec+ +b.dataset.add);c.fresh=true}
@@ -1396,7 +1396,7 @@ $("chg").onclick=function(e){var b=e.target.closest("button");if(!b||!CHG)return
  else if(b.dataset.ch==="clear"){c.rec=0;c.fresh=true}
  else if(b.dataset.ch==="cancel"){$("chg").classList.remove("show");CHG=null;return}
  else if(b.dataset.ch==="fin"){$("chg").classList.remove("show");CHG=null;loadPay();loadMap(true);return}
- else if(b.dataset.ch==="ok"){if(c.rec<c.sum||!c.rec)return;c.busy=true;drawChange();
+ else if(b.dataset.ch==="ok"){if(!c.rec)c.rec=c.sum;c.busy=true;drawChange();
   call("payOrders",[c.items,"現金",c.joint],function(){c.done=true;c.busy=false;drawChange()},function(m){alert(m);$("chg").classList.remove("show");CHG=null;loadPay()});return}
  drawChange()};
 $("pay").onchange=function(e){var k=e.target.dataset.pc;if(k==null)return;PSel[k]=e.target.checked;pbarDraw()};
