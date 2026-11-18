@@ -1,6 +1,7 @@
 {
-  "name": "鮮味愛喝湯 點餐系統",
-  "short_name": "鮮味愛喝湯",
+  "id": "freshpot-beta",
+  "name": "鮮味愛喝湯 雲端測試版",
+  "short_name": "愛喝湯測試",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
