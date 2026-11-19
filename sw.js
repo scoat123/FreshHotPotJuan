@@ -1,8 +1,8 @@
 /* 鮮味愛喝湯 離線快取：先用快取、背景更新；安裝新版時略過瀏覽器快取，確保拿到最新檔案 */
-var CACHE = 'freshpot-v32';
+var CACHE = 'freshpot-v33';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return Promise.all(FILES.map(function (u) { return fetch(new Request(u, { cache: 'reload' })).then(function (r) { if (!r.ok) throw new Error(u); return c.put(u, r); }); })); }).then(function () { return self.skipWaiting(); }));
+  e.waitUntil(caches.open(CACHE).then(function (c) { return Promise.all(FILES.map(function (u) { return fetch(new Request(u, { cache: 'reload' })).then(function (r) { if (!r.ok) throw new Error(u); return c.put(u, r); }); })); }).then(function () { return caches.open(CACHE).then(function (c) { return fetch(new Request('./help.html', { cache: 'reload' })).then(function (r) { if (r.ok) return c.put('./help.html', r); }).catch(function () {}); }); }).then(function () { return self.skipWaiting(); }));
 });
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (ks) {
