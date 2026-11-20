@@ -90,7 +90,11 @@ aside{background:var(--surf);border-left:1px solid var(--line);display:flex;flex
  .cls{display:block!important}
 }
 .cls{display:none;margin:12px 12px 0;padding:10px;border-radius:10px;border:2px solid var(--line)}
-body[data-v="login"] #app,body[data-v="admin"] #app,body[data-v="map"] #app{display:none}
+body[data-v="login"] #app,body[data-v="admin"] #app,body[data-v="map"] #app,body[data-v="punch"] #app{display:none}
+#punch{display:none;height:calc(100% - var(--tb));overflow:auto;padding:16px 20px}body[data-v="punch"] #punch{display:block}
+.pclk{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:10px}
+.pc{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px;border-radius:16px;border:3px solid var(--line);background:var(--surf);min-height:150px}.pc b{font-size:24px}.pc span,.pc em{font-style:normal;color:var(--mute);font-size:15px}.pc i{margin-top:auto;font-style:normal;font-weight:800;text-align:center;padding:10px;border-radius:10px;background:var(--red);color:#fff;font-size:18px}.pc.in{border-color:#12946f}.pc.in em{color:#12946f;font-weight:700}.pc.in i{background:#12946f}
+.pmsg{background:#12946f;color:#fff;padding:12px 16px;border-radius:12px;font-weight:700;margin-bottom:12px}.sg{display:inline-flex;align-items:center;gap:6px;margin:3px 14px 3px 0}.sg button{padding:6px 10px;border-radius:8px;border:2px solid var(--line)}#tb button[data-sxa],#tb button[data-sxc]{padding:8px 12px;border-radius:10px;border:2px solid var(--line);background:var(--surf)}
 #login,#admin{display:none}
 body[data-v="login"] #login{display:flex}
 body[data-v="admin"] #admin{display:block}
@@ -366,6 +370,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
 <div id="login"></div>
 <div id="admin"></div>
 <div id="kitchen"></div>
+<div id="punch"></div>
 <div id="tmap"></div>
 <div class="ov" id="zoom"></div>
 <div class="ov" id="pay"></div>
@@ -398,7 +403,7 @@ var DEFAULT_TABLES = [
 ];
 /* 訂單欄位（與原試算表相同）：0時間 1單號 2類型 3桌號 4品項 5備註 6金額 7明細JSON 8狀態 9收款 10付款方式 11收款時間 12追加 13併單結帳 14原桌號 */
 var MUT = { swapTables:1, mergeTables:1, unmergeTable:1, clearTable:1, saveItem:1, setItemOn:1, deleteItem:1, submitOrder:1, setStatus:1, setPassword:1, clearOrders:1, payOrders:1, voidOrder:1,
-  setPayMode:1, saveTables:1, setGuests:1, closeShift:1, setShiftSplit:1, moveTable:1, importBackup:1 };
+  setPayMode:1, saveTables:1, setGuests:1, closeShift:1, setShiftSplit:1, moveTable:1, importBackup:1, saveStaff:1, deleteStaff:1, punch:1, savePunch:1, deletePunch:1 };
 
 var DB = null, store = null, initP = null, chain = Promise.resolve();
 
@@ -922,6 +927,128 @@ function listCloses(token) {
   });
 }
 
+/* ---------- 員工／打卡 ---------- */
+function staffMap_() { return DB.conf.staff || (DB.conf.staff = {}); }
+function punchMap_() { return DB.conf.punch || (DB.conf.punch = {}); }
+function validT_(t) { return /^([01]\d|2[0-3]):[0-5]\d$/.test(t); }
+function mOf_(t) { return +t.slice(0, 2) * 60 + +t.slice(3, 5); }
+function tms_(s) { return new Date(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10), +s.slice(11, 13), +s.slice(14, 16)).getTime(); }
+function dowOf_(day) { return new Date(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)).getDay(); }
+function cleanSch_(sch) {
+  var out = {}, d, k;
+  for (d = 0; d < 7; d++) {
+    var a = (sch && sch[d]) || [], b = [];
+    for (k = 0; k < a.length; k++) {
+      var s = String(a[k][0] || ''), e = String(a[k][1] || '');
+      if (!s && !e) continue;
+      if (!validT_(s) || !validT_(e)) return { err: '請填寫完整的上班與下班時間' };
+      if (s >= e) return { err: '每個時段的下班時間必須晚於上班時間' };
+      b.push([s, e]);
+    }
+    b.sort(function (x, y) { return x[0] < y[0] ? -1 : 1; });
+    for (k = 1; k < b.length; k++) if (b[k][0] < b[k - 1][1]) return { err: '同一天的時段不可重疊' };
+    if (b.length) out[d] = b;
+  }
+  return { sch: out };
+}
+function getStaff(token) {
+  var a = auth_(token); if (a.err) return a;
+  var M = staffMap_();
+  return { list: Object.keys(M).map(function (k) { return { id: k, n: M[k].n, on: M[k].on ? 1 : 0, sch: M[k].sch || {}, t: M[k].t || 0 }; })
+    .sort(function (x, y) { return x.t - y.t || (x.n < y.n ? -1 : 1); }) };
+}
+function saveStaff(token, st) {
+  var a = auth_(token); if (a.err) return a;
+  var n = String((st && st.n) || '').trim(); if (!n) return { err: '請輸入員工姓名' };
+  if (n.length > 20) return { err: '姓名太長' };
+  var M = staffMap_(), k;
+  for (k in M) if (k !== st.id && M[k].n === n) return { err: '已有同名的員工' };
+  var c = cleanSch_(st.sch); if (c.err) return c;
+  var id = st.id && M[st.id] ? st.id : id_();
+  M[id] = { n: n, on: st.on === false || st.on === 0 ? 0 : 1, sch: c.sch, t: M[id] ? (M[id].t || Date.now()) : Date.now() };
+  return { ok: true, id: id };
+}
+function deleteStaff(token, id) {
+  var a = auth_(token); if (a.err) return a;
+  delete staffMap_()[id]; return { ok: true };
+}
+function openPunch_(sid) {
+  var P = punchMap_(), best = null, k;
+  for (k in P) if (P[k].s === sid && !P[k].o && (!best || P[k].i > P[best].i)) best = k;
+  return best;
+}
+function nowM_() { return fmt(new Date()).slice(0, 16); }
+function openState_(r) { return (tms_(nowM_()) - tms_(r.i)) / 36e5 <= 16 ? '上班中' : '未打下班'; }
+function evalPunch_(S, r) {
+  var o = { exp: '', late: 0, early: 0, mins: 0, off: false, st: '' }, day = r.i.slice(0, 10), segs = (S && S.sch && S.sch[dowOf_(day)]) || [];
+  var im = mOf_(r.i.slice(11, 16));
+  if (!segs.length) o.off = true;
+  else {
+    var best = null, bd = 1e9;
+    segs.forEach(function (sg) { var d = Math.abs(im - mOf_(sg[0])); if (d < bd) { bd = d; best = sg; } });
+    o.exp = best[0] + '–' + best[1]; o.late = Math.max(0, im - mOf_(best[0]));
+    if (r.o && r.o.slice(0, 10) === day) o.early = Math.max(0, mOf_(best[1]) - mOf_(r.o.slice(11, 16)));
+  }
+  if (r.o) o.mins = Math.max(0, Math.round((tms_(r.o) - tms_(r.i)) / 60000)); else o.st = openState_(r);
+  return o;
+}
+function punch(token, sid) {
+  var a = auth_(token); if (a.err) return a;
+  var S = staffMap_()[sid]; if (!S) return { err: '找不到這位員工' };
+  if (!S.on) return { err: '這位員工已停用' };
+  var now = nowM_(), P = punchMap_(), ok = openPunch_(sid);
+  if (ok && openState_(P[ok]) === '上班中') {
+    if (now < P[ok].i) now = P[ok].i;
+    P[ok].o = now; return { ok: true, action: 'out', time: now.slice(11), mins: Math.round((tms_(now) - tms_(P[ok].i)) / 60000) };
+  }
+  P[id_()] = { s: sid, n: S.n, i: now, o: '' };
+  return { ok: true, action: 'in', time: now.slice(11) };
+}
+function getPunchBoard(token) {
+  var a = auth_(token); if (a.err) return a;
+  var M = staffMap_(), P = punchMap_(), today = todayStr(), dow = dowOf_(today), k;
+  var list = Object.keys(M).filter(function (s) { return M[s].on; }).sort(function (x, y) { return (M[x].t || 0) - (M[y].t || 0); }).map(function (s) {
+    var o = openPunch_(s), r = o ? P[o] : null, inn = !!(r && openState_(r) === '上班中');
+    return { id: s, n: M[s].n, segs: ((M[s].sch || {})[dow] || []).map(function (g) { return g[0] + '–' + g[1]; }),
+      state: inn ? 'in' : 'out', since: inn ? r.i.slice(5, 16) : '', late: inn ? evalPunch_(M[s], r).late : 0, stale: !!(r && !inn) };
+  });
+  var recs = [];
+  for (k in P) if (P[k].i.slice(0, 10) === today) { var e = evalPunch_(M[P[k].s], P[k]); recs.push({ n: M[P[k].s] ? M[P[k].s].n : P[k].n, i: P[k].i.slice(11), o: P[k].o ? P[k].o.slice(11) : '', mins: e.mins, late: e.late, st: e.st }); }
+  recs.sort(function (x, y) { return x.i < y.i ? -1 : 1; });
+  return { today: today, staff: list, recs: recs };
+}
+function listPunches(token, from, to, sid) {
+  var a = auth_(token); if (a.err) return a;
+  var M = staffMap_(), P = punchMap_(), recs = [], sum = {}, k;
+  for (k in P) {
+    var r = P[k], d = r.i.slice(0, 10);
+    if (d < from || d > to || (sid && r.s !== sid)) continue;
+    var S = M[r.s], e = evalPunch_(S, r), n = S ? S.n : r.n;
+    recs.push({ id: k, s: r.s, n: n, i: r.i, o: r.o, exp: e.exp, late: e.late, early: e.early, mins: e.mins, off: e.off, st: e.st });
+    var m = sum[r.s] || (sum[r.s] = { s: r.s, n: n, cnt: 0, mins: 0, lateC: 0, lateM: 0, earlyC: 0, earlyM: 0 });
+    m.cnt++; m.mins += e.mins; if (e.late > 0) { m.lateC++; m.lateM += e.late; } if (e.early > 0) { m.earlyC++; m.earlyM += e.early; }
+  }
+  recs.sort(function (x, y) { return x.i < y.i ? 1 : -1; });
+  return { recs: recs, sum: Object.keys(sum).map(function (s) { return sum[s]; }).sort(function (x, y) { return x.n < y.n ? -1 : 1; }) };
+}
+function normT_(t) { t = String(t || '').trim().replace('T', ' ').slice(0, 16); return /^\d{4}-\d\d-\d\d \d\d:\d\d$/.test(t) ? t : ''; }
+function savePunch(token, r) {
+  var a = auth_(token); if (a.err) return a;
+  var P = punchMap_(), S = staffMap_()[r.s], old = r.id && P[r.id];
+  if (!S && !old) return { err: '請選擇員工' };
+  var i = normT_(r.i), o = r.o ? normT_(r.o) : '';
+  if (!i) return { err: '請填寫上班時間' };
+  if (r.o && !o) return { err: '下班時間格式不正確' };
+  if (o && o <= i) return { err: '下班時間必須晚於上班時間' };
+  var id = old ? r.id : id_();
+  P[id] = { s: S ? r.s : old.s, n: S ? S.n : old.n, i: i, o: o };
+  return { ok: true };
+}
+function deletePunch(token, id) {
+  var a = auth_(token); if (a.err) return a;
+  delete punchMap_()[id]; return { ok: true };
+}
+
 /* ---------- 備份／還原（離線版新增） ---------- */
 function exportBackup(token) { var a = auth_(token); if (a.err) return a; return { data: DB }; }
 function importBackup(token, d) {
@@ -934,6 +1061,7 @@ var API = { login: login, logout: logout, getMenu: getMenu, getMenuAdmin: getMen
   submitOrder: submitOrder, getKitchen: getKitchen, setStatus: setStatus, serveLines: serveLines, swapTables: swapTables, mergeTables: mergeTables, unmergeTable: unmergeTable, getAdmin: getAdmin, setPassword: setPassword, clearOrders: clearOrders,
   getTabs: getTabs, payOrders: payOrders, voidOrder: voidOrder, getSettings: getSettings, setPayMode: setPayMode, getFloor: getFloor, saveTables: saveTables,
   setGuests: setGuests, clearTable: clearTable, getReport2: getReport2, closeShift: closeShift, listCloses: listCloses, setShiftSplit: setShiftSplit, moveTable: moveTable,
+ getStaff: getStaff, saveStaff: saveStaff, deleteStaff: deleteStaff, punch: punch, getPunchBoard: getPunchBoard, listPunches: listPunches, savePunch: savePunch, deletePunch: deletePunch,
   exportBackup: exportBackup, importBackup: importBackup };
 
 /* ---------- 雲端同步 ---------- */
@@ -1146,7 +1274,7 @@ window.addEventListener("error",function(e){alert("發生錯誤："+e.message)})
 var drafts={},ordering=false,tabSel="map",lastR=-1,guest=false,zi=null,MENU=[],cat=0,mode="內用",table=null,cart={},token=null,role=null,sel="f",pin="",tab="orders",lastP=-1,dE=null,MA=null;
 var $=function(i){return document.getElementById(i)};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-var MUT=["swapTables","mergeTables","unmergeTable","clearTable","submitOrder","setStatus","serveLines","payOrders","voidOrder","saveItem","setItemOn","deleteItem","setPayMode","setGuests","moveTable","importBackup","clearOrders"],bc=window.BroadcastChannel?new BroadcastChannel("hotpot-web"):null;
+var MUT=["swapTables","mergeTables","unmergeTable","clearTable","submitOrder","setStatus","serveLines","payOrders","voidOrder","saveItem","setItemOn","deleteItem","setPayMode","setGuests","moveTable","importBackup","clearOrders","saveStaff","deleteStaff","punch","savePunch","deletePunch"],bc=window.BroadcastChannel?new BroadcastChannel("hotpot-web"):null;
 if(bc)bc.onmessage=function(e){OFF.reload().then(function(){var v=document.body.dataset.v;if(v==="kitchen")kLoad(true);else if(v==="front"||v==="map"){if(/Item|PayMode/.test(e.data))loadMenu(true);loadMap(true)}})};
 function post(fn,args){return OFF.run(fn,args)}
 function call(fn,args,ok,fail,noTok){
@@ -1251,8 +1379,8 @@ function setV(v){document.body.dataset.v=v;drawTabs()}
 function dots(){var n=Math.max(6,pin.length),h="";for(var i=0;i<n;i++)h+='<i class="'+(i<pin.length?"f":"")+'"></i>';$("dots").innerHTML=h;$("dots").setAttribute("aria-label","已輸入 "+pin.length+" 位")}
 function press(k){if(k==="x")pin=pin.slice(0,-1);else if(k==="c")pin="";else if(pin.length<8)pin+=k;$("err").textContent="";dots()}
 function loginUI(){sel="f";pin="";var pad="";["1","2","3","4","5","6","7","8","9","c","0","x"].forEach(function(k){pad+='<button data-k="'+k+'"'+(k==="c"||k==="x"?' class="fn"':"")+' aria-label="'+(k==="c"?"清除":k==="x"?"退格":k)+'">'+(k==="c"?"清除":k==="x"?"⌫":k)+"</button>"});
- $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v33</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
-function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v33 · 快取 "+k.sort().pop()}).catch(function(){})}
+ $("login").innerHTML='<div class="lg"><h2>鮮味愛喝湯</h2><p style="text-align:center;margin:8px 0 0;font-size:24px;font-weight:800">請輸入密碼</p><div class="dots" id="dots" role="status"></div><div class="err" id="err"></div><div class="pad">'+pad+'</div><button class="go" id="lg">登入</button><p id="ver" style="text-align:center;color:var(--mute);font-size:13px;margin:12px 0 0">版本 v34</p><p id="syncL" class="syncb" style="text-align:center;margin:2px 0 0"></p></div>';dots();showVer();drawSync()}
+function showVer(){var e=$("ver");if(!e||!window.caches)return;caches.keys().then(function(k){k=k.filter(function(x){return x.indexOf("freshpot-")===0});if(k.length)e.textContent="版本 v34 · 快取 "+k.sort().pop()}).catch(function(){})}
 var SYS={st:"loading",pending:0};
 function drawSync(){var t=SYS.st,x=SYS.pending,tx,cl;
  if(t==="ok"){tx=x?"☁ 上傳中 "+x:"☁ 已同步";cl="ok"}else if(t==="offline"){tx=x?"☁ 離線中（待上傳 "+x+"）":"☁ 離線中（連線後自動同步）";cl="wait"}else if(t==="nologin"){tx="☁ 未登入雲端";cl="bad"}else if(t==="error"){tx="☁ 同步異常";cl="bad"}else{tx="☁ 連線中…";cl="wait"}
@@ -1262,9 +1390,9 @@ OFF.sync.onStatus=function(s){SYS=s;drawSync()};
 OFF.sync.onRemote=function(o){if(o&&o.menu)rmMenu=true;clearTimeout(rmT);rmT=setTimeout(function(){var v=document.body.dataset.v,mm=rmMenu;rmMenu=false;if(v==="kitchen")kLoad(true);else if((v==="front"||v==="map")&&!$("ov").classList.contains("show")&&!$("pay").classList.contains("show")){if(mm&&v==="front")loadMenu(true);loadMap(true)}},400)};
 document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".syncb");if(!b)return;var m={ok:"已和雲端同步。",offline:"目前離線，資料先存在這台裝置，連上網路後會自動上傳。",nologin:"這台裝置還沒登入雲端。請登出後，用目前的密碼重新登入一次（需要網路）。",error:"同步發生問題："+(SYS.err||"")+"\n資料仍安全存在這台裝置，稍後會自動重試。"};alert(m[SYS.st]||"正在連線雲端…")});
 function enter(){role="b";lastP=-1;tabSel="order";ordering=false;setV("map");loadMenu(true);loadMap()}
-var TABN=[["order","點餐畫面"],["kitchen","廚房畫面"],["admin","後台"]];
+var TABN=[["order","點餐畫面"],["kitchen","廚房畫面"],["punch","打卡"],["admin","後台"]];
 function drawTabs(){$("topbar").innerHTML=TABN.map(function(t){return'<button data-tab="'+t[0]+'" class="'+(t[0]===tabSel?"on":"")+'">'+t[1]+"</button>"}).join("")+'<span class="sp"></span><span class="syncb"></span><button data-tab="out" class="lo">登出</button>';drawSync()}
-function goTab(t){tabSel=t;if(t==="map"){setV("map");loadMap()}else if(t==="order"){if(ordering){setV("front");render()}else{setV("map");loadMap()}}else if(t==="kitchen"){lastP=-1;setV("kitchen");kLoad()}else{setV("admin");renderAdmin()}}
+function goTab(t){tabSel=t;if(t==="map"){setV("map");loadMap()}else if(t==="order"){if(ordering){setV("front");render()}else{setV("map");loadMap()}}else if(t==="kitchen"){lastP=-1;setV("kitchen");kLoad()}else if(t==="punch"){setV("punch");renderPunch()}else{setV("admin");renderAdmin()}}
 $("topbar").onclick=function(e){var b=e.target.closest("button");if(!b)return;if(b.dataset.tab==="out")logout();else goTab(b.dataset.tab)};
 function tryLogin(){if(!pin)return;var btn=$("lg");btn.disabled=true;btn.textContent="登入中…";
  call("login",[sel,pin],function(res){token=res.token;role=res.role;pin="";enter()},function(m){btn.disabled=false;btn.textContent="登入";$("err").textContent=m;pin="";dots()},true)}
@@ -1356,9 +1484,9 @@ document.addEventListener("keydown",function(e){
 setInterval(function(){if(document.body.dataset.v==="kitchen")kLoad(true)},10000);
 setInterval(function(){if(document.body.dataset.v==="front"&&!$("ov").classList.contains("show"))loadMenu(true)},90000);
 /* ---------- 後台 ---------- */
-var TABS=[["orders","訂單紀錄"],["report","報表結帳"],["menu","菜單管理"],["floor","桌位"],["set","設定"],["help","使用說明"]];
+var TABS=[["orders","訂單紀錄"],["report","報表結帳"],["menu","菜單管理"],["floor","桌位"],["staff","員工排班"],["att","出勤紀錄"],["set","設定"],["help","使用說明"]];
 function renderAdmin(){$("admin").innerHTML='<div class="ah"><h1>後台管理</h1></div><div class="tabs">'+TABS.map(function(t){return'<button data-tab="'+t[0]+'" class="'+(t[0]===tab?"on":"")+'">'+t[1]+"</button>"}).join("")+'</div><div id="tb"><div class="empty">載入中…</div></div>';
- ({floor:tFloor,orders:tOrders,report:tReport,menu:tMenu,set:tSet,help:tHelp})[tab]()}
+ ({floor:tFloor,orders:tOrders,report:tReport,menu:tMenu,set:tSet,help:tHelp,staff:tStaff,att:tAtt})[tab]()}
 function bad(m){$("tb").innerHTML='<div class="empty">'+esc(m)+"</div>"}
 function tOrders(){call("getAdmin",[],function(d){$("tb").innerHTML='<div class="stats"><div>今日訂單<b>'+d.todayCount+'</b></div><div>今日營業額<b>$'+d.todaySum+'</b></div><div>累計營業額<b>$'+d.sum+'</b></div><div>未收款<b>$'+d.unpaid+'</b></div></div><div class="ah"><h2 style="margin:0">訂單紀錄（最近 200 筆）</h2><span class="sp"></span><button id="aRef">重新整理</button><button id="aClr">清除全部訂單</button></div>'+(d.orders.length?d.orders.map(function(o){return'<div class="ord"><div class="oh"><span>#'+esc(o.no)+' · '+(o.mode==="內用"?"桌號 "+esc(o.table):"外帶")+' <span class="tag">'+esc(o.status)+'</span> <span class="tag">'+(o.paid?"已收款（"+esc(o.method)+"）"+(o.joint?" 併單 "+esc(o.joint):""):"未收款")+"</span>"+(o.addon?' <span class="tag">追加</span>':"")+(o.from?' <span class="tag">原 '+esc(o.from)+"</span>":"")+'</span><span>$'+o.total+'</span></div><p>'+esc(o.time)+'</p><p>'+esc(o.items)+'</p>'+(o.note?'<p>備註：'+esc(o.note)+'</p>':'')+(o.status!=="取消"?'<button class="tg" data-vd="'+o.row+'" data-no="'+esc(o.no)+'">作廢</button>':"")+'</div>'}).join(""):'<div class="empty">尚無訂單</div>')},bad)}
 var RP={from:"",to:"",shift:"",date:""},RD=null,CL=null,SPL="16:00";
@@ -1384,6 +1512,50 @@ function openClose(shift){if(!RD)return;var cash=(RD.rec.by["現金"]||{s:0}).s;
  $("dlg").innerHTML='<h3>'+(shift==="全日"?"日結":"結小帳")+"：<b>"+esc(shift)+"</b> "+esc(RP.date)+"</h3><p>營業額 <b>$"+RD.sum+"</b>，實際收款 <b>$"+RD.rec.total+"</b></p>"+(RD.unpaid.c?'<div class="warn">還有 '+RD.unpaid.c+" 張單尚未收款，共 $"+RD.unpaid.s+"</div>":"")+'<p>系統現金收款：<b>$'+cash+'</b></p><label>實點現金（請扣除零用金）</label><input id="cc" inputmode="numeric" placeholder="輸入實際清點的現金"><p id="cd" style="font-size:20px;font-weight:800">差額：—</p><label>備註</label><input id="cn" placeholder="（選填）"><div class="acts"><button class="ghost" id="back">取消</button><button class="go" id="cok">確認結帳</button></div>';$("ov").classList.add("show")}
 function tMenu(){call("getMenuAdmin",[],function(d){MA=d;var names=d.cats.map(function(c){return c.t});d.items.forEach(function(i){if(names.indexOf(i.c)<0)names.push(i.c)});
  $("tb").innerHTML='<div class="ah"><h2 style="margin:0">菜單管理</h2><span class="sp"></span><button class="pri" id="mNew">＋新增品項</button></div>'+names.map(function(n){var its=d.items.filter(function(i){return i.c===n});return its.length?"<h3>"+esc(n)+"</h3>"+its.map(function(i){return'<div class="mi'+(i.on?"":" off")+'">'+(i.img?imgTag(i.img,120):'<div class="ph">'+ic(i,i.c)+'</div>')+'<div class="nm">'+(i.prep?"⏳ ":"")+esc(i.n)+"<small>"+i.v.map(function(v){return(v.l?esc(v.l)+" ":"")+"$"+v.p}).join(" / ")+'</small></div><button class="tg'+(i.on?" on":"")+'" data-tg="'+i.id+'" data-on="'+(i.on?1:0)+'">'+(i.on?"供應中":"已下架")+'</button><button class="tg" data-ed="'+i.id+'">編輯</button></div>'}).join(""):""}).join("")},bad)}
+/* ---------- 打卡／員工排班／出勤紀錄 ---------- */
+var PT=null,SE=null,STF=[],AT={from:"",to:"",sid:"",edit:null},WD=[[1,"週一"],[2,"週二"],[3,"週三"],[4,"週四"],[5,"週五"],[6,"週六"],[0,"週日"]];
+function hm(m){return m>=60?Math.floor(m/60)+" 小時"+(m%60?" "+m%60+" 分":""):m+" 分"}
+function renderPunch(){$("punch").innerHTML='<div class="ah"><h1>員工打卡</h1><span class="sp"></span><span id="pclk" class="pclk"></span></div><div id="pbody"><div class="empty">載入中…</div></div>';pLoad();clearInterval(PT);var f=function(){var e=$("pclk");if(!e||document.body.dataset.v!=="punch"){clearInterval(PT);return}var d=new Date();e.textContent=d2(d.getHours())+":"+d2(d.getMinutes())+":"+d2(d.getSeconds())};f();PT=setInterval(f,1000)}
+function pLoad(msg){call("getPunchBoard",[],function(d){var h=msg?'<div class="pmsg">'+esc(msg)+"</div>":"";
+ h+=d.staff.length?'<div class="pg">'+d.staff.map(function(s){var inn=s.state==="in";return'<button class="pc'+(inn?" in":"")+'" data-pu="'+esc(s.id)+'" data-pin="'+(inn?1:0)+'"><b>'+esc(s.n)+"</b><span>"+(s.segs.length?"今日 "+esc(s.segs.join("、")):"今日未排班")+"</span><em>"+(inn?"● 上班中（"+esc(s.since)+"）"+(s.late>0?" 遲到 "+s.late+" 分":""):(s.stale?"⚠ 上次未打下班":"尚未上班"))+"</em><i>"+(inn?"下班打卡":"上班打卡")+"</i></button>"}).join("")+"</div>":'<div class="empty">尚未建立員工<br>請到「後台 → 員工排班」新增</div>';
+ h+="<h3>今日打卡紀錄</h3>"+(d.recs.length?'<table class="tb"><tr><th>員工</th><th>上班</th><th>下班</th><th>工時</th><th>狀況</th></tr>'+d.recs.map(function(r){return"<tr><td>"+esc(r.n)+"</td><td>"+r.i+"</td><td>"+(r.o||"—")+"</td><td>"+(r.o?hm(r.mins):"—")+"</td><td>"+(r.st||"")+(r.late>0?" 遲到 "+r.late+" 分":"")+"</td></tr>"}).join("")+"</table>":'<div class="empty">今天還沒有人打卡</div>');
+ var b=$("pbody");if(b)b.innerHTML=h},function(m){var b=$("pbody");if(b)b.innerHTML='<div class="empty">'+esc(m)+"</div>"})}
+$("punch").onclick=function(e){var b=e.target.closest("button[data-pu]");if(!b||b.disabled)return;var n=b.querySelector("b").textContent,inn=b.dataset.pin==="1",d=new Date();
+ if(!confirm(n+" "+(inn?"下班":"上班")+"打卡？\n現在時間 "+d2(d.getHours())+":"+d2(d.getMinutes())))return;
+ b.disabled=true;call("punch",[b.dataset.pu],function(r){pLoad(n+(r.action==="in"?" 上班打卡成功 ":" 下班打卡成功 ")+r.time+(r.action==="out"?"（本次 "+hm(r.mins)+"）":""))},function(m){alert(m);pLoad()})};
+function schTxt(sch){var t=WD.filter(function(w){return sch[w[0]]&&sch[w[0]].length}).map(function(w){return w[1].slice(1)+" "+sch[w[0]].map(function(g){return g[0]+"–"+g[1]}).join("、")});return t.length?t.join("　"):"尚未排班"}
+function tStaff(){call("getStaff",[],function(d){STF=d.list;SE=null;drawStaff()},bad)}
+function drawStaff(){var h;
+ if(!SE){h='<div class="ah"><h2 style="margin:0">員工與預計上班時間</h2><span class="sp"></span><button class="pri" data-sxnew="1">＋ 新增員工</button></div>'+(STF.length?STF.map(function(s){return'<div class="ord"><div class="oh"><span>'+esc(s.n)+(s.on?"":' <span class="tag">已停用</span>')+'</span><span></span></div><p>'+esc(schTxt(s.sch))+'</p><button class="tg" data-sxe="'+esc(s.id)+'">編輯</button> <button class="tg" data-sxt="'+esc(s.id)+'">'+(s.on?"停用":"啟用")+'</button> <button class="tg" data-sxd="'+esc(s.id)+'">刪除</button></div>'}).join(""):'<div class="empty">還沒有員工，請按「新增員工」</div>')+'<p style="color:var(--mute);font-size:15px">每位員工可依「星期」設定一到多個上班時段（例如 11:00–14:00、17:00–21:30），打卡時會用來計算遲到、早退。停用的員工不會出現在打卡頁；刪除員工不會刪除其過去的打卡紀錄。</p>'}
+ else{h='<div class="ah"><h2 style="margin:0">'+(SE.id?"編輯員工":"新增員工")+'</h2></div><div class="ah">姓名 <input class="dt" id="sxn" maxlength="20" value="'+esc(SE.n)+'" style="width:180px"> <label><input type="checkbox" id="sxo"'+(SE.on?" checked":"")+'> 在職</label></div><table class="tb">'+WD.map(function(w){var d=w[0],a=SE.sch[d]||[];return"<tr><td><b>"+w[1]+"</b></td><td style=\"text-align:left\">"+a.map(function(g,k){return'<span class="sg"><input type="time" class="dt" data-sxi="'+d+"."+k+'.0" value="'+g[0]+'"> – <input type="time" class="dt" data-sxi="'+d+"."+k+'.1" value="'+g[1]+'"> <button data-sxx="'+d+"."+k+'" aria-label="刪除時段">✕</button></span>'}).join("")+(a.length?"":'<span style="color:var(--mute)">休息　</span>')+'<button data-sxa="'+d+'">＋時段</button></td><td><button data-sxc="'+d+'">複製到全部</button></td></tr>'}).join("")+'</table><div class="ah" style="margin-top:14px"><button data-sxcancel="1">取消</button><button class="pri" data-sxsave="1">儲存</button></div>'}
+ $("tb").innerHTML=h}
+function syncSE(){var n=$("sxn");if(n)SE.n=n.value;var o=$("sxo");if(o)SE.on=o.checked}
+$("admin").addEventListener("change",function(e){var t=e.target;if(!SE||!t.dataset||!t.dataset.sxi)return;var p=t.dataset.sxi.split(".");SE.sch[p[0]][+p[1]][+p[2]]=t.value});
+$("admin").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var D=b.dataset;
+ if(D.sxnew){SE={id:"",n:"",on:1,sch:{}};drawStaff()}
+ else if(D.sxe){var s=STF.filter(function(x){return x.id===D.sxe})[0];SE=JSON.parse(JSON.stringify(s));drawStaff()}
+ else if(D.sxt){var s2=STF.filter(function(x){return x.id===D.sxt})[0];call("saveStaff",[{id:s2.id,n:s2.n,on:s2.on?0:1,sch:s2.sch}],tStaff,function(m){alert(m)})}
+ else if(D.sxd){var s3=STF.filter(function(x){return x.id===D.sxd})[0];if(confirm("確定刪除「"+s3.n+"」？過去的打卡紀錄會保留。"))call("deleteStaff",[s3.id],tStaff)}
+ else if(D.sxcancel)tStaff();
+ else if(D.sxa){syncSE();var d=D.sxa,a=SE.sch[d]||(SE.sch[d]=[]);a.push(a.length?["17:00","21:00"]:["11:00","14:00"]);drawStaff()}
+ else if(D.sxx){syncSE();var q=D.sxx.split(".");SE.sch[q[0]].splice(+q[1],1);drawStaff()}
+ else if(D.sxc){syncSE();var src=JSON.stringify(SE.sch[D.sxc]||[]);for(var i=0;i<7;i++)SE.sch[i]=JSON.parse(src);drawStaff()}
+ else if(D.sxsave){syncSE();call("saveStaff",[SE],tStaff,function(m){alert(m)})}
+ else if(D.axp){var td=new Date(),f,t;if(D.axp==="today"){f=t=ymd(td)}else if(D.axp==="week"){var w=(td.getDay()+6)%7;f=ymd(new Date(td.getFullYear(),td.getMonth(),td.getDate()-w));t=ymd(td)}else if(D.axp==="month"){f=ymd(new Date(td.getFullYear(),td.getMonth(),1));t=ymd(td)}else{f=ymd(new Date(td.getFullYear(),td.getMonth()-1,1));t=ymd(new Date(td.getFullYear(),td.getMonth(),0))}AT.from=f;AT.to=t;AT.edit=null;tAtt(true)}
+ else if(D.axq){AT.from=$("af").value;AT.to=$("at").value;AT.sid=$("as").value;if(!AT.from||!AT.to||AT.from>AT.to){alert("請選擇正確的日期範圍");return}AT.edit=null;tAtt(true)}
+ else if(D.axnew){AT.edit={id:"",s:AT.sid||"",i:AT.to+"T12:00",o:""};tAtt(true)}
+ else if(D.axe){var r=AT.recs.filter(function(x){return x.id===D.axe})[0];AT.edit={id:r.id,s:r.s,i:r.i.replace(" ","T"),o:r.o.replace(" ","T")};tAtt(true)}
+ else if(D.axd){if(confirm("確定刪除這筆打卡紀錄？"))call("deletePunch",[D.axd],function(){tAtt(true)})}
+ else if(D.axcancel){AT.edit=null;tAtt(true)}
+ else if(D.axsave){var E=AT.edit;E.s=$("aes").value;E.i=$("aei").value;E.o=$("aeo").value;call("savePunch",[E],function(){AT.edit=null;tAtt(true)},function(m){alert(m)})}});
+function tAtt(keep){if(!keep||!AT.from){var td=new Date();AT.from=ymd(new Date(td.getFullYear(),td.getMonth(),1));AT.to=ymd(td);AT.edit=null}
+ call("getStaff",[],function(sd){STF=sd.list;call("listPunches",[AT.from,AT.to,AT.sid],function(d){AT.recs=d.recs;
+  var h='<div class="ah" style="flex-wrap:wrap"><button data-axp="today">今天</button><button data-axp="week">本週</button><button data-axp="month">本月</button><button data-axp="last">上月</button><input type="date" class="dt" id="af" value="'+AT.from+'"> ～ <input type="date" class="dt" id="at" value="'+AT.to+'"><select class="dt" id="as"><option value="">全部員工</option>'+STF.map(function(s){return'<option value="'+esc(s.id)+'"'+(s.id===AT.sid?" selected":"")+">"+esc(s.n)+"</option>"}).join("")+'</select><button class="pri" data-axq="1">查詢</button><span class="sp"></span><button data-axnew="1">＋ 補登打卡</button></div>';
+  if(AT.edit){var E=AT.edit;h+='<div class="ord"><div class="oh"><span>'+(E.id?"編輯打卡紀錄":"補登打卡")+'</span><span></span></div><div class="ah" style="flex-wrap:wrap;margin:6px 0"><select class="dt" id="aes">'+(E.s?"":'<option value="">請選擇員工</option>')+STF.map(function(s){return'<option value="'+esc(s.id)+'"'+(s.id===E.s?" selected":"")+">"+esc(s.n)+"</option>"}).join("")+'</select> 上班 <input type="datetime-local" class="dt" id="aei" value="'+E.i+'"> 下班 <input type="datetime-local" class="dt" id="aeo" value="'+E.o+'"> <button data-axcancel="1">取消</button><button class="pri" data-axsave="1">儲存</button></div><p style="margin:0;color:var(--mute);font-size:14px">忘記打下班時，下班時間可先留空，之後再補。</p></div>'}
+  h+="<h3>工時統計</h3>"+(d.sum.length?'<table class="tb"><tr><th>員工</th><th>出勤次數</th><th>總工時</th><th>遲到</th><th>早退</th></tr>'+d.sum.map(function(m){return"<tr><td>"+esc(m.n)+"</td><td>"+m.cnt+"</td><td>"+hm(m.mins)+"</td><td>"+(m.lateC?m.lateC+" 次／"+m.lateM+" 分":"—")+"</td><td>"+(m.earlyC?m.earlyC+" 次／"+m.earlyM+" 分":"—")+"</td></tr>"}).join("")+"</table>":'<div class="empty">這段期間沒有打卡紀錄</div>');
+  h+=d.recs.length?"<h3>打卡明細</h3>"+'<table class="tb"><tr><th>日期</th><th>員工</th><th>預計</th><th>上班</th><th>下班</th><th>工時</th><th>狀況</th><th></th></tr>'+d.recs.map(function(r){var st=[];if(r.st)st.push(r.st);if(r.late>0)st.push("遲到 "+r.late+" 分");if(r.early>0)st.push("早退 "+r.early+" 分");if(r.off)st.push("非排班");return"<tr><td>"+r.i.slice(5,10)+"</td><td>"+esc(r.n)+"</td><td>"+(r.exp||"—")+"</td><td>"+r.i.slice(11)+"</td><td>"+(r.o?(r.o.slice(0,10)===r.i.slice(0,10)?r.o.slice(11):r.o.slice(5)):"—")+"</td><td>"+(r.o?hm(r.mins):"—")+"</td><td>"+esc(st.join("、"))+'</td><td><button class="tg" data-axe="'+r.id+'">編輯</button> <button class="tg" data-axd="'+r.id+'">刪除</button></td></tr>'}).join("")+"</table>":"";
+  $("tb").innerHTML=h},bad)},bad)}
+
 function tHelp(){$("tb").innerHTML='<div class="ah"><span class="sp"></span><a href="help.html" target="_blank">單獨開啟</a></div><iframe src="help.html" style="width:100%;height:calc(100vh - 190px);min-height:400px;border:0;border-radius:10px;background:#fff"></iframe>'}
 function tSet(){call("getSettings",[],function(d){var pm=function(k,t,x){return'<button data-pm="'+k+'" class="'+(d.payMode===k?"on":"")+'">'+t+"<small>"+x+"</small></button>"};$("tb").innerHTML='<h3>結帳方式</h3><div class="seg">'+pm("after","餐後結帳","先出餐，客人吃完再到櫃台結帳")+pm("before","餐前結帳","先收款，收款後訂單才送到廚房")+'</div><p style="color:var(--mute);font-size:15px">切換後只影響新訂單；已送出但尚未付款的訂單，仍需先收款。</p><h3>午市／晚市分界</h3><div class="pwf"><label>晚市開始時間<input id="sp" type="time" value="'+esc(d.shiftSplit||"16:00")+'"></label><button id="spSave">儲存</button></div><h3>登入密碼</h3><div class="pwf"><label>新密碼（6–8 位數字）<input id="pb" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="輸入新密碼" autocomplete="new-password"></label><button id="aSave">更改密碼</button></div><h3>資料備份</h3><div class="pwf"><button id="bkExp">匯出備份檔</button><button id="bkImpBtn">匯入備份檔</button><button id="bkPaste">貼上備份文字</button><button id="bkSnaps">自動備份紀錄</button><input type="file" id="bkImp" accept=".json,application/json" hidden></div><p style="color:var(--mute);font-size:15px">資料會存在這台裝置並同步到雲端（訂單、菜單、桌位、密碼）。仍建議每天結帳後按「匯出備份檔」，存到「檔案」App 或 iCloud。換裝置時，在新裝置按「匯入備份檔」即可。</p>'},bad)}
 $("admin").oninput=function(e){var id=e.target.id,t=ET[es];
